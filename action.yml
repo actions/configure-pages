@@ -1,4 +1,4 @@
-name: 'Set the Base URL'
+name: 'Get the Base URL'
 description: 'Get the base URL where the Github Page will be hosted'
 runs:
   using: 'node16'
