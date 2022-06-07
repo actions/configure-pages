@@ -3,7 +3,7 @@ const axios = require('axios')
 
 
 
-async function getPageBaseUrl(evtOrExitCodeOrError) {
+async function getPageBaseUrl() {
   try {
     if (deployment.requestedDeployment) {
       const pagesEndpoint = `https://api.github.com/repos/${process.env.GITHUB_REPOSITORY}/pages`
@@ -26,6 +26,15 @@ async function getPageBaseUrl(evtOrExitCodeOrError) {
     }
   } catch (e) {
     console.info('Get on the Page failed', e)
+    process.exit(1)
   }
-  process.exit(isNaN(+evtOrExitCodeOrError) ? 1 : +evtOrExitCodeOrError)
+}
+
+
+async function main() {
+  try {
+    await getPageBaseUrl()
+  } catch (error) {
+    core.setFailed(error)
+  }
 }
