@@ -1,0 +1,23 @@
+{
+  "name": "setup-pages",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/paper-spa/setup-pages.git"
+  },
+  "author": "GitHub",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/paper-spa/setup-pages/issues"
+  },
+  "homepage": "https://github.com/paper-spa/setup-pages#readme",
+  "dependencies": {
+    "@actions/core": "^1.8.2",
+    "axios": "^0.27.2"
+  }
+}
