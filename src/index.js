@@ -4,14 +4,12 @@ const axios = require('axios')
 async function getPageBaseUrl() {
   try {
     const pagesEndpoint = `https://api.github.com/repos/${process.env.GITHUB_REPOSITORY}/pages`
-     const response = await axios.get(
+    const response = await axios.get(
       pagesEndpoint,
-      {},
       {
         headers: {
           Accept: 'application/vnd.github.v3+json',
-          Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-          'Content-type': 'application/json'
+          Authorization: `Bearer ${process.env.GITHUB_TOKEN}`
         }
       }
     )
