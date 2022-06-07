@@ -1,8 +1,6 @@
 const core = require('@actions/core')
 const axios = require('axios')
 
-
-
 async function getPageBaseUrl() {
   try {
     if (deployment.requestedDeployment) {
