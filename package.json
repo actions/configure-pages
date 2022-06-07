@@ -4,7 +4,8 @@
   "description": "",
   "main": "src/index.js",
   "scripts": {
-    "prepare": "ncc build src/index.js -o dist --source-map --license licenses.txt"
+    "prepare": "ncc build src/index.js -o dist --source-map --license licenses.txt",
+    "test": "jest"
   },
   "repository": {
     "type": "git",
