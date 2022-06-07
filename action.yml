@@ -2,7 +2,7 @@ name: 'Get the Base URL'
 description: 'Get the base URL where the Github Page will be hosted'
 runs:
   using: 'node16'
-  main: 'src/index.js'
+  main: 'dist/index.js'
 outputs:
   base_url:
     description: 'URL to deployed GitHub Pages'
