@@ -22,6 +22,7 @@
     "axios-retry": "^3.2.5"
   },
   "devDependencies": {
-    "@vercel/ncc": "^0.34.0"
+    "@vercel/ncc": "^0.34.0",
+    "jest": "^28.1.1"
   }
 }
