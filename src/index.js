@@ -36,3 +36,7 @@ async function main() {
     core.setFailed(error)
   }
 }
+
+
+// Main
+main()
