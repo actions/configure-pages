@@ -18,6 +18,10 @@
   "homepage": "https://github.com/paper-spa/setup-pages#readme",
   "dependencies": {
     "@actions/core": "^1.8.2",
-    "axios": "^0.27.2"
+    "axios": "^0.27.2",
+    "axios-retry": "^3.2.5"
+  },
+  "devDependencies": {
+    "@vercel/ncc": "^0.34.0"
   }
 }
