@@ -1,18 +1,23 @@
 const core = require('@actions/core')
 const axios = require('axios')
 
+// All variables we need from the runtime are loaded here
+const getContext = require('./context')
+
 async function getPageBaseUrl() {
   try {
-    const pagesEndpoint = `https://api.github.com/repos/${process.env.GITHUB_REPOSITORY}/pages`
+    const context = getContext()
+    
+    const pagesEndpoint = `https://api.github.com/repos/${context.repositoryNwo}/pages`
 
-    core.info("GITHUB_TOKEN : " + process.env.GITHUB_TOKEN)
+    core.info("GITHUB_TOKEN : " + context.githubToken)
 
     const response = await axios.get(
       pagesEndpoint,
       {
         headers: {
           Accept: 'application/vnd.github.v3+json',
-          Authorization: `Bearer ${process.env.GITHUB_TOKEN}`
+          Authorization: `Bearer ${context.githubToken}`
         }
       }
     )
