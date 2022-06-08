@@ -12,6 +12,7 @@ async function getPageBaseUrl() {
 
     core.info("GITHUB_TOKEN : " + context.githubToken)
 
+    core.info(`Get the Base URL to the page with endpoint ${pagesEndpoint}`)
     const response = await axios.get(
       pagesEndpoint,
       {
@@ -24,8 +25,12 @@ async function getPageBaseUrl() {
 
     pageObject = response.data
     core.info(JSON.stringify(pageObject))
-    core.setOutput('base_url', pageObject.html_url)
-    core.info(`Get the Base URL to the page with endpoint ${pagesEndpoint}`)
+
+    const siteUrl = new URL(pageObject.html_url)
+    core.setOutput('base_url', siteUrl.href)
+    core.setOutput('origin', siteUrl.origin)
+    core.setOutput('host', siteUrl.host)
+    core.setOutput('base_path', siteUrl.pathname)
   } catch (e) {
     console.info('Get on the Page failed', e)
     process.exit(1)
