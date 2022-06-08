@@ -3,6 +3,11 @@ description: 'Get the base URL where the GitHub Pages site will be hosted'
 runs:
   using: 'node16'
   main: 'dist/index.js'
+inputs:
+  token:
+    description: 'GitHub token'
+    default: ${{ github.token }}
+    required: true
 outputs:
   base_url:
     description: 'URL to deployed GitHub Pages'

@@ -8053,6 +8053,33 @@ exports.debug = debug; // for test
 
 /***/ }),
 
+/***/ 1319:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+const core = __nccwpck_require__(2186)
+
+// Load variables from Actions runtime
+function getRequiredVars() {
+  return {
+    repositoryNwo: process.env.GITHUB_REPOSITORY,
+    githubToken: core.getInput('token')
+  }
+}
+
+module.exports = function getContext() {
+  const requiredVars = getRequiredVars()
+  for (const variable in requiredVars) {
+    if (requiredVars[variable] === undefined) {
+      throw new Error(`${variable} is undefined. Cannot continue.`)
+    }
+  }
+  core.debug('all variables are set')
+  return requiredVars
+}
+
+
+/***/ }),
+
 /***/ 9491:
 /***/ ((module) => {
 
@@ -8217,18 +8244,23 @@ var __webpack_exports__ = {};
 const core = __nccwpck_require__(2186)
 const axios = __nccwpck_require__(6545)
 
+// All variables we need from the runtime are loaded here
+const getContext = __nccwpck_require__(1319)
+
 async function getPageBaseUrl() {
   try {
-    const pagesEndpoint = `https://api.github.com/repos/${process.env.GITHUB_REPOSITORY}/pages`
+    const context = getContext()
+    
+    const pagesEndpoint = `https://api.github.com/repos/${context.repositoryNwo}/pages`
 
-    core.info("GITHUB_TOKEN : " + process.env.GITHUB_TOKEN)
+    core.info("GITHUB_TOKEN : " + context.githubToken)
 
     const response = await axios.get(
       pagesEndpoint,
       {
         headers: {
           Accept: 'application/vnd.github.v3+json',
-          Authorization: `Bearer ${process.env.GITHUB_TOKEN}`
+          Authorization: `Bearer ${context.githubToken}`
         }
       }
     )
