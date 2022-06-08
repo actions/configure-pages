@@ -8290,6 +8290,7 @@ const getContext = __nccwpck_require__(1319)
 
 async function main() {
   try {
+    const context = getContext()
     await getPagesBaseUrl(context)
   } catch (error) {
     core.setFailed(error)

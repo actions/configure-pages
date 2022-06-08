@@ -7,6 +7,7 @@ const getContext = require('./context')
 
 async function main() {
   try {
+    const context = getContext()
     await getPagesBaseUrl(context)
   } catch (error) {
     core.setFailed(error)
