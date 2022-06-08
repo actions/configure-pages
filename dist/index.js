@@ -8080,6 +8080,46 @@ module.exports = function getContext() {
 
 /***/ }),
 
+/***/ 9965:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+const core = __nccwpck_require__(2186)
+const axios = __nccwpck_require__(6545)
+
+async function getPagesBaseUrl({ repositoryNwo, githubToken}) {
+  try {
+    const pagesEndpoint = `https://api.github.com/repos/${repositoryNwo}/pages`
+
+    core.info(`Get the Base URL to the page with endpoint ${pagesEndpoint}`)
+    const response = await axios.get(
+      pagesEndpoint,
+      {
+        headers: {
+          Accept: 'application/vnd.github.v3+json',
+          Authorization: `Bearer ${githubToken}`
+        }
+      }
+    )
+
+    pageObject = response.data
+    core.info(JSON.stringify(pageObject))
+
+    const siteUrl = new URL(pageObject.html_url)
+    core.setOutput('base_url', siteUrl.href)
+    core.setOutput('origin', siteUrl.origin)
+    core.setOutput('host', siteUrl.host)
+    core.setOutput('base_path', siteUrl.pathname)
+  } catch (error) {
+    core.error('Get on the Page failed', error)
+    throw error
+  }
+}
+
+module.exports = getPagesBaseUrl
+
+
+/***/ }),
+
 /***/ 9491:
 /***/ ((module) => {
 
@@ -8242,50 +8282,18 @@ var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
 (() => {
 const core = __nccwpck_require__(2186)
-const axios = __nccwpck_require__(6545)
+
+const getPagesBaseUrl = __nccwpck_require__(9965)
 
 // All variables we need from the runtime are loaded here
 const getContext = __nccwpck_require__(1319)
 
-async function getPageBaseUrl() {
-  try {
-    const context = getContext()
-    
-    const pagesEndpoint = `https://api.github.com/repos/${context.repositoryNwo}/pages`
-
-    core.info("GITHUB_TOKEN : " + context.githubToken)
-
-    core.info(`Get the Base URL to the page with endpoint ${pagesEndpoint}`)
-    const response = await axios.get(
-      pagesEndpoint,
-      {
-        headers: {
-          Accept: 'application/vnd.github.v3+json',
-          Authorization: `Bearer ${context.githubToken}`
-        }
-      }
-    )
-
-    pageObject = response.data
-    core.info(JSON.stringify(pageObject))
-
-    const siteUrl = new URL(pageObject.html_url)
-    core.setOutput('base_url', siteUrl.href)
-    core.setOutput('origin', siteUrl.origin)
-    core.setOutput('host', siteUrl.host)
-    core.setOutput('base_path', siteUrl.pathname)
-  } catch (e) {
-    console.info('Get on the Page failed', e)
-    process.exit(1)
-  }
-}
-
-
 async function main() {
   try {
-    await getPageBaseUrl()
+    await getPagesBaseUrl(context)
   } catch (error) {
     core.setFailed(error)
+    process.exit(1)
   }
 }
 
