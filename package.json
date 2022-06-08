@@ -20,7 +20,8 @@
   "dependencies": {
     "@actions/core": "^1.8.2",
     "axios": "^0.27.2",
-    "axios-retry": "^3.2.5"
+    "axios-retry": "^3.2.5",
+    "ncc": "^0.3.6"
   },
   "devDependencies": {
     "@vercel/ncc": "^0.34.0",

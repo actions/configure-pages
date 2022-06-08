@@ -8220,6 +8220,9 @@ const axios = __nccwpck_require__(6545)
 async function getPageBaseUrl() {
   try {
     const pagesEndpoint = `https://api.github.com/repos/${process.env.GITHUB_REPOSITORY}/pages`
+
+    core.info("GITHUB_TOKEN : " + process.env.GITHUB_TOKEN)
+
     const response = await axios.get(
       pagesEndpoint,
       {

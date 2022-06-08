@@ -4,6 +4,9 @@ const axios = require('axios')
 async function getPageBaseUrl() {
   try {
     const pagesEndpoint = `https://api.github.com/repos/${process.env.GITHUB_REPOSITORY}/pages`
+
+    core.info("GITHUB_TOKEN : " + process.env.GITHUB_TOKEN)
+
     const response = await axios.get(
       pagesEndpoint,
       {
