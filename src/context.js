@@ -3,6 +3,7 @@ const core = require('@actions/core')
 // Load variables from Actions runtime
 function getRequiredVars() {
   return {
+    repositoryNwo: process.env.GITHUB_REPOSITORY,
     githubToken: core.getInput('token')
   }
 }
