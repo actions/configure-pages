@@ -1,4 +1,4 @@
-# setup-pages
+# configure-pages
 
 An action to enable Pages and extract metadata.
 
