@@ -7,7 +7,7 @@ An action to enable Pages and extract metadata.
 
 In order to release a new version of this Action:
 
-1. Locate the semantic version of the upcoming release (a draft is maintained by the [`draft-release` workflow][draft-release])
+1. Locate the semantic version of the upcoming release (a draft is maintained by the [`draft-release` workflow][draft-release.yml])
 
 2. Push a matching tag, for instance for `v0.1.0`:
 
