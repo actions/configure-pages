@@ -7,13 +7,13 @@ async function enablePages({ repositoryNwo, githubToken }) {
   try {
     const response = await axios.post(
       pagesEndpoint,
+      { build_type: 'workflow' },
       {
         headers: {
           Accept: 'application/vnd.github.v3+json',
           Authorization: `Bearer ${githubToken}`,
           'Content-type': 'application/json',
         },
-        body: JSON.stringify({ build_type: 'workflow' }),
       }
     )
     core.info('Created pages site')
