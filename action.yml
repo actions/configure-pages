@@ -4,6 +4,9 @@ runs:
   using: 'node16'
   main: 'dist/index.js'
 inputs:
+  static_site_generator: 
+    description: 'static site generator types. We currently support nuxt, next and gatsby'
+    required: false
   token:
     description: 'GitHub token'
     default: ${{ github.token }}

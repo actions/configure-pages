@@ -4,7 +4,8 @@ const core = require('@actions/core')
 function getRequiredVars() {
   return {
     repositoryNwo: process.env.GITHUB_REPOSITORY,
-    githubToken: core.getInput('token')
+    githubToken: core.getInput('token'),
+    staticSiteGenerator: core.getInput('static_site_generator')
   }
 }
 
