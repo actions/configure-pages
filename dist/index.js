@@ -8080,6 +8080,44 @@ module.exports = function getContext() {
 
 /***/ }),
 
+/***/ 5424:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+const core = __nccwpck_require__(2186)
+const axios = __nccwpck_require__(6545)
+
+async function enablePages({ repositoryNwo, githubToken }) {
+  const pagesEndpoint = `https://api.github.com/repos/${repositoryNwo}/pages`
+
+  try {
+    const response = await axios.post(
+      pagesEndpoint,
+      { build_type: 'workflow' },
+      {
+        headers: {
+          Accept: 'application/vnd.github.v3+json',
+          Authorization: `Bearer ${githubToken}`,
+          'Content-type': 'application/json',
+        },
+      }
+    )
+    core.info('Created pages site')
+  } catch (error) {
+    if (error.response && error.response.status === 409) {
+      core.info('Pages site exists')
+      return
+    }
+
+    core.error('Couldn\'t create pages site', error)
+    throw error
+  }
+}
+
+module.exports = enablePages
+
+
+/***/ }),
+
 /***/ 9965:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -8283,6 +8321,7 @@ var __webpack_exports__ = {};
 (() => {
 const core = __nccwpck_require__(2186)
 
+const enablePages = __nccwpck_require__(5424)
 const getPagesBaseUrl = __nccwpck_require__(9965)
 
 // All variables we need from the runtime are loaded here
@@ -8291,6 +8330,7 @@ const getContext = __nccwpck_require__(1319)
 async function main() {
   try {
     const context = getContext()
+    await enablePages(context)
     await getPagesBaseUrl(context)
   } catch (error) {
     core.setFailed(error)
