@@ -1,6 +1,6 @@
 const core = require('@actions/core')
 const axios = require('axios')
-import ConfigParser from './config-parser.js'
+const ConfigParser = require('./config-parser')
 
 async function setPagesPath({staticSiteGenerator, baseUrl}) {
   try {
@@ -19,7 +19,7 @@ async function setPagesPath({staticSiteGenerator, baseUrl}) {
         var ssConfig = {
           filePath:"./next.config.js",
           type: "next",
-          pathName: "basePath", 
+          pathName: "basePath",
           newPath: baseUrl
         }
         break;
@@ -36,7 +36,7 @@ async function setPagesPath({staticSiteGenerator, baseUrl}) {
     }
 
     let configParser = new ConfigParser(ssConfig)
-    if (configParser.config) configParser.parse()   
+    if (configParser.config) configParser.parse()
 
   } catch (error) {
     core.error('Set pages path in the static site generator config failed', error)
