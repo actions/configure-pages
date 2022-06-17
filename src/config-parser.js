@@ -11,6 +11,10 @@ const espreeOptions = {
 
 class ConfigParser {
   constructor(staticSiteConfig) {
+    this.pathPropertyNuxt = `router: {\n        base: '{0}'\n    }`
+    this.pathPropertyNext = `basePath: '{0}'`
+    this.pathPropertyGatsby = `pathPrefix: '{0}'`
+    this.configskeleton = `export default {\n    {0}\n}`
     this.staticSiteConfig = staticSiteConfig
     this.config = fs.existsSync(this.staticSiteConfig.filePath) ? fs.readFileSync(this.staticSiteConfig.filePath, "utf8") : null
     this.validate()
@@ -26,11 +30,6 @@ class ConfigParser {
       })
     }
   }
-
-  pathPropertyNuxt = `router: {\n        base: '{0}'\n    }`
-  pathPropertyNext = `basePath: '{0}'`
-  pathPropertyGatsby = `pathPrefix: '{0}'`
-  configskeleton = `export default {\n    {0}\n}`
 
   generateConfigFile() {
     switch (this.staticSiteConfig.type) {
@@ -149,7 +148,6 @@ class ConfigParser {
   parseNextGatsby(pathNode) {
     if (pathNode) {
       console.log("base node = " + JSON.stringify(pathNode.value))
-
       const newConfig = this.config.slice(0, pathNode.value.range[0]) + `'${this.staticSiteConfig.newPath}'` + this.config.slice(pathNode.value.range[1])
       console.log("new config = \n" + newConfig)
     }
