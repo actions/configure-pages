@@ -1,6 +1,7 @@
 const fs = require("fs")
 const espree = require("espree")
 const format = require("string-format")
+const core = require('@actions/core')
 
 // Parse the AST
 const espreeOptions = {
@@ -64,7 +65,7 @@ class ConfigParser {
   }
 
   parse() {
-    console.log(`original configuration:\n${this.config}`)
+    core.info(`original configuration:\n${this.config}`)
     const ast = espree.parse(this.config, espreeOptions);
 
     // Find the default export declaration node
@@ -91,7 +92,7 @@ class ConfigParser {
           throw "Unknown config type"
       }
     }
-    console.log(`parsed configuration:\n${this.config}`)
+    core.info(`parsed configuration:\n${this.config}`)
     fs.writeFileSync(this.staticSiteConfig.filePath, this.config)
     return this.config
   }
@@ -103,13 +104,13 @@ class ConfigParser {
 
     if (!propertyNode) {
 
-      console.log("Unable to find property, insert it :  " + this.staticSiteConfig.pathName)
+      core.info("Unable to find property, insert it :  " + this.staticSiteConfig.pathName)
       if (exportNode.expression.right.properties.length > 0) {
        this.config = this.config.slice(0, exportNode.expression.right.properties[0].range[0]) + this.generateConfigProperty() + ',\n' + this.config.slice(exportNode.expression.right.properties[0].range[0])
-        console.log("new config = \n" + this.config)
+        core.info("new config = \n" + this.config)
       } else {
        this.config = this.config.slice(0, exportNode.expression.right.range[0] + 1) + '\n    ' + this.generateConfigProperty() + '\n' + this.config.slice(exportNode.expression.right.range[1] - 1)
-        console.log("new config = \n" + this.config)
+        core.info("new config = \n" + this.config)
       }
     }
     return propertyNode
@@ -122,13 +123,13 @@ class ConfigParser {
 
     if (!propertyNode) {
 
-      console.log("Unable to find property, insert it " + this.staticSiteConfig.pathName)
+      core.info("Unable to find property, insert it " + this.staticSiteConfig.pathName)
       if (exportNode.declaration.properties.length > 0) {
         this.config = this.config.slice(0, exportNode.declaration.properties[0].range[0]) + this.generateConfigProperty() + ',\n' + this.config.slice(exportNode.declaration.properties[0].range[0])
-        console.log("new config = \n" + this.config)
+        core.info("new config = \n" + this.config)
       } else {
         this.config = this.config.slice(0, exportNode.declaration.range[0] + 1) + '\n    ' + this.generateConfigProperty() + '\n' + this.config.slice(exportNode.declaration.range[1] - 1)
-        console.log("new config = \n" + this.config)
+        core.info("new config = \n" + this.config)
       }
     }
 

@@ -40,6 +40,7 @@ async function setPagesPath({staticSiteGenerator, path}) {
 
   } catch (error) {
     core.error('Set pages path in the static site generator config failed', error)
+    console.log(error)
     throw error
   }
 }

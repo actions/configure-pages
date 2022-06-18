@@ -14532,6 +14532,7 @@ exports.debug = debug; // for test
 const fs = __nccwpck_require__(7147)
 const espree = __nccwpck_require__(6910)
 const format = __nccwpck_require__(3259)
+const core = __nccwpck_require__(2186)
 
 // Parse the AST
 const espreeOptions = {
@@ -14595,7 +14596,7 @@ class ConfigParser {
   }
 
   parse() {
-    console.log(`original configuration:\n${this.config}`)
+    core.info(`original configuration:\n${this.config}`)
     const ast = espree.parse(this.config, espreeOptions);
 
     // Find the default export declaration node
@@ -14622,7 +14623,7 @@ class ConfigParser {
           throw "Unknown config type"
       }
     }
-    console.log(`parsed configuration:\n${this.config}`)
+    core.info(`parsed configuration:\n${this.config}`)
     fs.writeFileSync(this.staticSiteConfig.filePath, this.config)
     return this.config
   }
@@ -14634,13 +14635,13 @@ class ConfigParser {
 
     if (!propertyNode) {
 
-      console.log("Unable to find property, insert it :  " + this.staticSiteConfig.pathName)
+      core.info("Unable to find property, insert it :  " + this.staticSiteConfig.pathName)
       if (exportNode.expression.right.properties.length > 0) {
        this.config = this.config.slice(0, exportNode.expression.right.properties[0].range[0]) + this.generateConfigProperty() + ',\n' + this.config.slice(exportNode.expression.right.properties[0].range[0])
-        console.log("new config = \n" + this.config)
+        core.info("new config = \n" + this.config)
       } else {
        this.config = this.config.slice(0, exportNode.expression.right.range[0] + 1) + '\n    ' + this.generateConfigProperty() + '\n' + this.config.slice(exportNode.expression.right.range[1] - 1)
-        console.log("new config = \n" + this.config)
+        core.info("new config = \n" + this.config)
       }
     }
     return propertyNode
@@ -14653,13 +14654,13 @@ class ConfigParser {
 
     if (!propertyNode) {
 
-      console.log("Unable to find property, insert it " + this.staticSiteConfig.pathName)
+      core.info("Unable to find property, insert it " + this.staticSiteConfig.pathName)
       if (exportNode.declaration.properties.length > 0) {
         this.config = this.config.slice(0, exportNode.declaration.properties[0].range[0]) + this.generateConfigProperty() + ',\n' + this.config.slice(exportNode.declaration.properties[0].range[0])
-        console.log("new config = \n" + this.config)
+        core.info("new config = \n" + this.config)
       } else {
         this.config = this.config.slice(0, exportNode.declaration.range[0] + 1) + '\n    ' + this.generateConfigProperty() + '\n' + this.config.slice(exportNode.declaration.range[1] - 1)
-        console.log("new config = \n" + this.config)
+        core.info("new config = \n" + this.config)
       }
     }
 
@@ -14783,7 +14784,6 @@ async function getPagesBaseUrl({ repositoryNwo, githubToken, staticSiteGenerator
     if ( staticSiteGenerator ) {
       setPagesPath({staticSiteGenerator, path: siteUrl.pathname})
     }
-
     core.setOutput('base_url', siteUrl.href)
     core.setOutput('origin', siteUrl.origin)
     core.setOutput('host', siteUrl.host)
@@ -14844,6 +14844,7 @@ async function setPagesPath({staticSiteGenerator, path}) {
 
   } catch (error) {
     core.error('Set pages path in the static site generator config failed', error)
+    console.log(error)
     throw error
   }
 }
