@@ -66,10 +66,10 @@ describe('configParser', () => {
   test.each(cases)(
     "%p parsed correctly",
     (fileName, configuration) => {
+      console.log(process.cwd())
       srcFileName = `${srcFolder}/${fileName}`
       tmpFileName = `${tmpFolder}/${fileName}`
       expectedFileName = `${expectedFolder}/${fileName}`
-
       fs.copyFileSync(srcFileName, tmpFileName)
       const parser = new ConfigParser(configuration)
       parser.parse()
