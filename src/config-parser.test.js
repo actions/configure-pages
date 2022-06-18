@@ -2,9 +2,9 @@ const { ConfigParser } = require('./config-parser')
 const fs = require("fs")
 const assert = require('assert')
 
-const srcFolder = `src/fixtures`
-const tmpFolder = `src/fixtures/tmp`
-const expectedFolder = `src/fixtures/expected`
+const srcFolder = `${process.cwd()}/src/fixtures`
+const tmpFolder = `${process.cwd()}/src/fixtures/tmp`
+const expectedFolder = `${process.cwd()}/src/fixtures/expected`
 
 const repoPath = "/amazing-new-repo/"
 
@@ -66,7 +66,6 @@ describe('configParser', () => {
   test.each(cases)(
     "%p parsed correctly",
     (fileName, configuration) => {
-      console.log(process.cwd())
       srcFileName = `${srcFolder}/${fileName}`
       tmpFileName = `${tmpFolder}/${fileName}`
       expectedFileName = `${expectedFolder}/${fileName}`
