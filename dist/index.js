@@ -14527,7 +14527,7 @@ exports.debug = debug; // for test
 /***/ }),
 
 /***/ 8395:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __nccwpck_require__) => {
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 const fs = __nccwpck_require__(7147)
 const espree = __nccwpck_require__(6910)
@@ -14595,6 +14595,7 @@ class ConfigParser {
   }
 
   parse() {
+    console.log(`original configuration:\n${this.config}`)
     const ast = espree.parse(this.config, espreeOptions);
 
     // Find the default export declaration node
@@ -14621,6 +14622,9 @@ class ConfigParser {
           throw "Unknown config type"
       }
     }
+    console.log(`parsed configuration:\n${this.config}`)
+    fs.writeFileSync(this.staticSiteConfig.filePath, this.config)
+    return this.config
   }
 
   getPropertyModuleExport(exportNode) {
@@ -14632,11 +14636,11 @@ class ConfigParser {
 
       console.log("Unable to find property, insert it :  " + this.staticSiteConfig.pathName)
       if (exportNode.expression.right.properties.length > 0) {
-        const newConfig = this.config.slice(0, exportNode.expression.right.properties[0].range[0]) + this.generateConfigProperty() + ',\n' + this.config.slice(exportNode.expression.right.properties[0].range[0])
-        console.log("new config = \n" + newConfig)
+       this.config = this.config.slice(0, exportNode.expression.right.properties[0].range[0]) + this.generateConfigProperty() + ',\n' + this.config.slice(exportNode.expression.right.properties[0].range[0])
+        console.log("new config = \n" + this.config)
       } else {
-        const newConfig = this.config.slice(0, exportNode.expression.right.range[0] + 1) + '\n    ' + this.generateConfigProperty() + '\n' + this.config.slice(exportNode.expression.right.range[1] - 1)
-        console.log("new config = \n" + newConfig)
+       this.config = this.config.slice(0, exportNode.expression.right.range[0] + 1) + '\n    ' + this.generateConfigProperty() + '\n' + this.config.slice(exportNode.expression.right.range[1] - 1)
+        console.log("new config = \n" + this.config)
       }
     }
     return propertyNode
@@ -14651,11 +14655,11 @@ class ConfigParser {
 
       console.log("Unable to find property, insert it " + this.staticSiteConfig.pathName)
       if (exportNode.declaration.properties.length > 0) {
-        const newConfig = this.config.slice(0, exportNode.declaration.properties[0].range[0]) + this.generateConfigProperty() + ',\n' + this.config.slice(exportNode.declaration.properties[0].range[0])
-        console.log("new config = \n" + newConfig)
+        this.config = this.config.slice(0, exportNode.declaration.properties[0].range[0]) + this.generateConfigProperty() + ',\n' + this.config.slice(exportNode.declaration.properties[0].range[0])
+        console.log("new config = \n" + this.config)
       } else {
-        const newConfig = this.config.slice(0, exportNode.declaration.range[0] + 1) + '\n    ' + this.generateConfigProperty() + '\n' + this.config.slice(exportNode.declaration.range[1] - 1)
-        console.log("new config = \n" + newConfig)
+        this.config = this.config.slice(0, exportNode.declaration.range[0] + 1) + '\n    ' + this.generateConfigProperty() + '\n' + this.config.slice(exportNode.declaration.range[1] - 1)
+        console.log("new config = \n" + this.config)
       }
     }
 
@@ -14667,24 +14671,20 @@ class ConfigParser {
     if (propertyNode && propertyNode.value.type === 'ObjectExpression') {
       var baseNode = propertyNode.value.properties.find(node => node.key.type === 'Identifier' && node.key.name === this.staticSiteConfig.subPathName)//'base')
       if (baseNode) {
-        console.log("base node = " + JSON.stringify(baseNode.value))
-
         // Swap the base value by a hardcoded string and print it
-        const newConfig = this.config.slice(0, baseNode.value.range[0]) + `'${this.staticSiteConfig.newPath}'` + this.config.slice(baseNode.value.range[1])
-        console.log("new config = \n" + newConfig)
+        this.config = this.config.slice(0, baseNode.value.range[0]) + `'${this.staticSiteConfig.newPath}'` + this.config.slice(baseNode.value.range[1])
       }
     }
   }
 
   parseNextGatsby(pathNode) {
     if (pathNode) {
-      console.log("base node = " + JSON.stringify(pathNode.value))
-      const newConfig = this.config.slice(0, pathNode.value.range[0]) + `'${this.staticSiteConfig.newPath}'` + this.config.slice(pathNode.value.range[1])
-      console.log("new config = \n" + newConfig)
+      this.config = this.config.slice(0, pathNode.value.range[0]) + `'${this.staticSiteConfig.newPath}'` + this.config.slice(pathNode.value.range[1])
     }
   }
 }
 
+module.exports = {ConfigParser}
 
 /***/ }),
 
@@ -14781,7 +14781,7 @@ async function getPagesBaseUrl({ repositoryNwo, githubToken, staticSiteGenerator
 
     const siteUrl = new URL(pageObject.html_url)
     if ( staticSiteGenerator ) {
-      setPagesPath({staticSiteGenerator, baseUrl: siteUrl.origin})
+      setPagesPath({staticSiteGenerator, path: siteUrl.pathname})
     }
 
     core.setOutput('base_url', siteUrl.href)
@@ -14804,9 +14804,9 @@ module.exports = getPagesBaseUrl
 
 const core = __nccwpck_require__(2186)
 const axios = __nccwpck_require__(6545)
-const ConfigParser = __nccwpck_require__(8395)
+const { ConfigParser } = __nccwpck_require__(8395)
 
-async function setPagesPath({staticSiteGenerator, baseUrl}) {
+async function setPagesPath({staticSiteGenerator, path}) {
   try {
     switch(staticSiteGenerator)
     {
@@ -14816,7 +14816,7 @@ async function setPagesPath({staticSiteGenerator, baseUrl}) {
           type: "nuxt",
           pathName: "router",
           subPathName: "base",
-          newPath: baseUrl
+          newPath: path
         }
         break;
       case 'next':
@@ -14824,7 +14824,7 @@ async function setPagesPath({staticSiteGenerator, baseUrl}) {
           filePath:"./next.config.js",
           type: "next",
           pathName: "basePath",
-          newPath: baseUrl
+          newPath: path
         }
         break;
       case 'gatsby':
@@ -14832,7 +14832,7 @@ async function setPagesPath({staticSiteGenerator, baseUrl}) {
           filePath: "./gatsby-config.js",
           type: "gatsby",
           pathName: "pathPrefix",
-          newPath: baseUrl
+          newPath: path
         }
         break;
       default:
@@ -14840,7 +14840,7 @@ async function setPagesPath({staticSiteGenerator, baseUrl}) {
     }
 
     let configParser = new ConfigParser(ssConfig)
-    if (configParser.config) configParser.parse()
+    configParser.parse()
 
   } catch (error) {
     core.error('Set pages path in the static site generator config failed', error)

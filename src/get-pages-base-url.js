@@ -22,7 +22,7 @@ async function getPagesBaseUrl({ repositoryNwo, githubToken, staticSiteGenerator
 
     const siteUrl = new URL(pageObject.html_url)
     if ( staticSiteGenerator ) {
-      setPagesPath({staticSiteGenerator, baseUrl: siteUrl.origin})
+      setPagesPath({staticSiteGenerator, path: siteUrl.pathname})
     }
 
     core.setOutput('base_url', siteUrl.href)

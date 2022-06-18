@@ -1,8 +1,8 @@
 const core = require('@actions/core')
 const axios = require('axios')
-const ConfigParser = require('./config-parser')
+const { ConfigParser } = require('./config-parser')
 
-async function setPagesPath({staticSiteGenerator, baseUrl}) {
+async function setPagesPath({staticSiteGenerator, path}) {
   try {
     switch(staticSiteGenerator)
     {
@@ -12,7 +12,7 @@ async function setPagesPath({staticSiteGenerator, baseUrl}) {
           type: "nuxt",
           pathName: "router",
           subPathName: "base",
-          newPath: baseUrl
+          newPath: path
         }
         break;
       case 'next':
@@ -20,7 +20,7 @@ async function setPagesPath({staticSiteGenerator, baseUrl}) {
           filePath:"./next.config.js",
           type: "next",
           pathName: "basePath",
-          newPath: baseUrl
+          newPath: path
         }
         break;
       case 'gatsby':
@@ -28,7 +28,7 @@ async function setPagesPath({staticSiteGenerator, baseUrl}) {
           filePath: "./gatsby-config.js",
           type: "gatsby",
           pathName: "pathPrefix",
-          newPath: baseUrl
+          newPath: path
         }
         break;
       default:
@@ -36,7 +36,7 @@ async function setPagesPath({staticSiteGenerator, baseUrl}) {
     }
 
     let configParser = new ConfigParser(ssConfig)
-    if (configParser.config) configParser.parse()
+    configParser.parse()
 
   } catch (error) {
     core.error('Set pages path in the static site generator config failed', error)
