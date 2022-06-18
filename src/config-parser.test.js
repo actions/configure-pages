@@ -69,6 +69,7 @@ describe('configParser', () => {
       srcFileName = `${srcFolder}/${fileName}`
       tmpFileName = `${tmpFolder}/${fileName}`
       expectedFileName = `${expectedFolder}/${fileName}`
+      fs.mkdirSync(tmpFolder, {recursive: true})
       fs.copyFileSync(srcFileName, tmpFileName)
       const parser = new ConfigParser(configuration)
       parser.parse()
