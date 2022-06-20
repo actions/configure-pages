@@ -1,7 +1,8 @@
 const core = require('@actions/core')
 const axios = require('axios')
+const setPagesPath = require('./set-pages-path')
 
-async function getPagesBaseUrl({ repositoryNwo, githubToken}) {
+async function getPagesBaseUrl({ repositoryNwo, githubToken, staticSiteGenerator}) {
   try {
     const pagesEndpoint = `https://api.github.com/repos/${repositoryNwo}/pages`
 
@@ -20,6 +21,9 @@ async function getPagesBaseUrl({ repositoryNwo, githubToken}) {
     core.info(JSON.stringify(pageObject))
 
     const siteUrl = new URL(pageObject.html_url)
+    if ( staticSiteGenerator ) {
+      setPagesPath({staticSiteGenerator, path: siteUrl.pathname})
+    }
     core.setOutput('base_url', siteUrl.href)
     core.setOutput('origin', siteUrl.origin)
     core.setOutput('host', siteUrl.host)
