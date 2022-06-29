@@ -23,7 +23,7 @@ class ConfigParser {
 
   validate() {
     if (!this.config) {
-      core.info(`original raw configuration was invalid:\n${this.config}`)
+      core.info(`original raw configuration was empty:\n${this.config}`)
       core.info('Generating a default configuration to start from...')
 
       // Update the `config` property with a default configuration file
