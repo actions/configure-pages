@@ -23,12 +23,11 @@ class ConfigParser {
 
   validate() {
     if (!this.config) {
-      // Create the config file if it doesn't exist
-      fs.writeFile(this.staticSiteConfig.filePath, this.generateConfigFile(), (err) => {
+      core.info(`original raw configuration was empty:\n${this.config}`)
+      core.info('Generating a default configuration to start from...')
 
-        // In case of a error throw err.
-        if (err) throw err;
-      })
+      // Update the `config` property with a default configuration file
+      this.config = this.generateConfigFile()
     }
   }
 
