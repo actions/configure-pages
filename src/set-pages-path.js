@@ -39,8 +39,7 @@ async function setPagesPath({staticSiteGenerator, path}) {
     configParser.parse()
 
   } catch (error) {
-    core.error('Set pages path in the static site generator config failed', error)
-    throw error
+    core.warning(`We were unable to determine how to inject the site metadata into your config. Generated URLs may be incorrect. The base URL for this site should be ${path}. Please ensure your framework is configured to generate relative links appropriately.`, error)
   }
 }
 
