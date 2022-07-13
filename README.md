@@ -1,7 +1,10 @@
-# configure-pages
+# Configure-Pages
 
-An action to enable Pages and extract metadata.
+An action to enable Pages and extract various metadata about a site. It can also be used to configure various static site generators we support as [starter workflows][starter-workflows].
 
+# Usage
+
+See [action.yml](action.yml)
 
 # Release instructions
 
@@ -19,3 +22,10 @@ In order to release a new version of this Action:
 3. Publish the draft release (the major tag such as `v0` will be created/updated by the [`release` workflow](release.yml))
 
    ⚠️ Environment approval is required.
+
+# License
+
+The scripts and documentation in this project are released under the [MIT License](LICENSE).
+
+<!-- references -->
+[starter-workflows]: https://github.com/actions/starter-workflows/tree/main/pages
