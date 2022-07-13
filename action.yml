@@ -1,14 +1,14 @@
-name: 'Get the Pages base URL'
-description: 'Get the base URL where the GitHub Pages site will be hosted'
+name: "Configure Pages"
+description: "An action to enable Pages and extract various metadata about a site. It can also be used to configure various static site generators we support as starter workflows."
 runs:
-  using: 'node16'
-  main: 'dist/index.js'
+  using: "node16"
+  main: "dist/index.js"
 inputs:
-  static_site_generator: 
-    description: 'static site generator types. We currently support nuxt, next and gatsby'
+  static_site_generator:
+    description: "Optional static site generator to attempt to configure (nuxt, next or gatsby)"
     required: false
   token:
-    description: 'GitHub token'
+    description: "GitHub token"
     default: ${{ github.token }}
     required: true
 outputs:
