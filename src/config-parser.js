@@ -1,209 +1,281 @@
 const fs = require('fs')
 const espree = require('espree')
-const format = require('string-format')
 const prettier = require('prettier')
 const core = require('@actions/core')
 
-// Parse the AST
-const espreeOptions = {
-  ecmaVersion: 6,
-  sourceType: 'module',
-  range: true
-}
+/*
+Parse a JavaScript based configuration file and initialize or update a given property.
+This is used to make sure most static site generators can automatically handle
+Pages's path based routing.
+
+Supported configuration initializations:
+
+(1) Default export:
+
+  export default {
+    // configuration object here
+  }
+
+(2) Direct module export:
+
+  module.exports = {
+    // configuration object here
+  }
+
+(3) Indirect module export:
+
+  const config = // configuration object here
+  module.exports = config
+*/
 
 class ConfigParser {
-  constructor(staticSiteConfig) {
-    this.pathPropertyNuxt = `router: { base: '{0}' }`
-    this.pathPropertyNext = `basePath: '{0}'`
-    this.pathPropertyGatsby = `pathPrefix: '{0}'`
-    this.configskeleton = `export default { {0} }`
-    this.staticSiteConfig = staticSiteConfig
-    this.config = fs.existsSync(this.staticSiteConfig.filePath)
-      ? fs.readFileSync(this.staticSiteConfig.filePath, 'utf8')
-      : null
-    this.validate()
-  }
+  // Ctor
+  // - configurationFile: path to the configuration file
+  // - propertyName: name of the property to update (or set)
+  // - propertyValue: value of the property to update (or set)
+  // - blankConfigurationFile: a blank configuration file to use if non was previously found
+  constructor({
+    configurationFile,
+    propertyName,
+    propertyValue,
+    blankConfigurationFile
+  }) {
+    // Save fields
+    this.configurationFile = configurationFile
+    this.propertyName = propertyName
+    this.propertyValue = propertyValue
 
-  validate() {
-    if (!this.config) {
-      core.info(`original raw configuration was empty:\n${this.config}`)
-      core.info('Generating a default configuration to start from...')
-
-      // Update the `config` property with a default configuration file
-      this.config = this.generateConfigFile()
+    // If the configuration file does not exist, initialize it with the blank configuration file
+    if (!fs.existsSync(this.configurationFile)) {
+      core.info('Use default blank configuration')
+      const blankConfiguration = fs.readFileSync(blankConfigurationFile, 'utf8')
+      fs.writeFileSync(this.configurationFile, blankConfiguration, {
+        encoding: 'utf8'
+      })
     }
+
+    // Read the configuration file
+    core.info('Read existing configuration')
+    this.configuration = fs.readFileSync(this.configurationFile, 'utf8')
   }
 
-  generateConfigFile() {
-    switch (this.staticSiteConfig.type) {
-      case 'nuxt':
-        return format(
-          this.configskeleton,
-          format(this.pathPropertyNuxt, this.staticSiteConfig.newPath)
-        )
-      case 'next':
-        return format(
-          this.configskeleton,
-          format(this.pathPropertyNext, this.staticSiteConfig.newPath)
-        )
-      case 'gatsby':
-        return format(
-          this.configskeleton,
-          format(this.pathPropertyGatsby, this.staticSiteConfig.newPath)
-        )
-      default:
-        throw 'Unknown config type'
+  // Find the configuration object in an AST.
+  // Look for a default export, a direct module export or an indirect module
+  // export (in that order).
+  //
+  // Return the configuration object or null.
+  findConfigurationObject(ast) {
+    // Try to find a default export
+    var defaultExport = ast.body.find(
+      node =>
+        node.type === 'ExportDefaultDeclaration' &&
+        node.declaration.type === 'ObjectExpression'
+    )
+    if (defaultExport) {
+      core.info('Found configuration object in default export declaration')
+      return defaultExport.declaration
     }
+
+    // Try to find a module export
+    var moduleExport = ast.body.find(
+      node =>
+        node.type === 'ExpressionStatement' &&
+        node.expression.type === 'AssignmentExpression' &&
+        node.expression.operator === '=' &&
+        node.expression.left.type === 'MemberExpression' &&
+        node.expression.left.object.type === 'Identifier' &&
+        node.expression.left.object.name === 'module' &&
+        node.expression.left.property.type === 'Identifier' &&
+        node.expression.left.property.name === 'exports'
+    )
+
+    // Direct module export
+    if (
+      moduleExport &&
+      moduleExport.expression.right.type === 'ObjectExpression'
+    ) {
+      core.info('Found configuration object in direct module export')
+      return moduleExport.expression.right
+    }
+
+    // Indirect module export
+    else if (
+      moduleExport &&
+      moduleExport.expression.right.type === 'Identifier'
+    ) {
+      const identifierName = moduleExport && moduleExport.expression.right.name
+      const identifierDefinition = ast.body.find(
+        node =>
+          node.type === 'VariableDeclaration' &&
+          node.declarations.length == 1 &&
+          node.declarations[0].type === 'VariableDeclarator' &&
+          node.declarations[0].id.type === 'Identifier' &&
+          node.declarations[0].id.name === identifierName &&
+          node.declarations[0].init.type === 'ObjectExpression'
+      )
+      if (identifierDefinition) {
+        core.info('Found configuration object in indirect module export')
+        return identifierDefinition.declarations[0].init
+      }
+    }
+
+    // No configuration object found
+    return null
   }
 
-  generateConfigProperty() {
-    switch (this.staticSiteConfig.type) {
-      case 'nuxt':
-        return format(this.pathPropertyNuxt, this.staticSiteConfig.newPath)
-      case 'next':
-        return format(this.pathPropertyNext, this.staticSiteConfig.newPath)
-      case 'gatsby':
-        return format(this.pathPropertyGatsby, this.staticSiteConfig.newPath)
-      default:
-        throw 'Unknown config type'
+  // Find a property with a given name on a given object.
+  //
+  // Return the matching property or null.
+  findProperty(object, name) {
+    // Try to find a property matching a given name
+    const property =
+      object.type === 'ObjectExpression' &&
+      object.properties.find(
+        node => node.key.type === 'Identifier' && node.key.name === name
+      )
+
+    // Return the property's value (if found) or null
+    if (property) {
+      return property.value
+    }
+    return null
+  }
+
+  // Generate a (nested) property declaration.
+  // - properties: list of properties to generate
+  // - startIndex: the index at which to start in the declaration
+  //
+  // Return a nested property declaration as a string.
+  getPropertyDeclaration(properties, startIndex) {
+    if (startIndex === properties.length - 1) {
+      return `${properties[startIndex]}: "${this.propertyValue}"`
+    } else {
+      return (
+        `${properties[startIndex]}: {` +
+        this.getPropertyDeclaration(properties, startIndex + 1) +
+        '}'
+      )
     }
   }
 
   parse() {
-    // Print current configuration
-    core.info(`original configuration:\n${this.config}`)
+    // Logging
+    core.info(`Parsing configuration:\n${this.configuration}`)
 
-    // Parse the AST
-    const ast = espree.parse(this.config, espreeOptions)
+    // Parse the AST out of the configuration file
+    const espreeOptions = {
+      ecmaVersion: 6,
+      sourceType: 'module',
+      range: true
+    }
+    const ast = espree.parse(this.configuration, espreeOptions)
 
-    // Find the default export declaration node
-    var exportNode = ast.body.find(node => node.type === 'ExpressionStatement')
-    if (exportNode) {
-      var property = this.getPropertyModuleExport(exportNode)
-    } else {
-      exportNode = ast.body.find(
-        node => node.type === 'ExportDefaultDeclaration'
-      )
-      if (!exportNode) throw 'Unable to find default export'
-      var property = this.getPropertyExportDefault(exportNode)
+    // Find the configuration object
+    var configurationObject = this.findConfigurationObject(ast)
+    if (!configurationObject) {
+      throw 'Could not find a configuration object in the configuration file'
     }
 
-    if (property) {
-      switch (this.staticSiteConfig.type) {
-        case 'nuxt':
-          this.parseNuxt(property)
-          break
-        case 'next':
-        case 'gatsby':
-          this.parseNextGatsby(property)
-          break
-        default:
-          throw 'Unknown config type'
+    // A property may be nested in the configuration file. Split the property name with `.`
+    // then walk the configuration object one property at a time.
+    var depth = 0
+    const properties = this.propertyName.split('.')
+    var lastNode = configurationObject
+    while (1) {
+      // Find the node for the current property
+      var propertyNode = this.findProperty(lastNode, properties[depth])
+
+      // Update last node
+      if (propertyNode != null) {
+        lastNode = propertyNode
+        depth++
+      }
+
+      // Exit when exiting the current configuration object
+      if (propertyNode == null || depth >= properties.length) {
+        break
       }
     }
 
-    // Write down the updated configuration
-    core.info(`parsed configuration:\n${this.config}`)
-    fs.writeFileSync(this.staticSiteConfig.filePath, this.config)
+    // If the configuration file is defining the property we are after, update it.
+    if (depth == properties.length) {
+      // The last node identified is an object expression, so do the assignment
+      if (lastNode.type === 'ObjectExpression') {
+        this.configuration =
+          this.configuration.slice(0, lastNode.value.range[0]) +
+          `"${this.propertyValue}"` +
+          this.configuration.slice(lastNode.value.range[1])
+      }
+
+      // A misc object was found in the configuration file (e.g. an array, a string, a boolean,
+      // a number, etc.), just replace the whole range by our declaration
+      else {
+        this.configuration =
+          this.configuration.slice(0, lastNode.range[0]) +
+          `"${this.propertyValue}"` +
+          this.configuration.slice(lastNode.range[1])
+      }
+    }
+
+    // Create nested properties in the configuration file
+    else {
+      // Build the declaration to inject
+      const declaration = this.getPropertyDeclaration(properties, depth)
+
+      // The last node identified is an object expression, so do the assignment
+      if (lastNode.type === 'ObjectExpression') {
+        // The object is blank (no properties) so replace the whole range by a new object containing the declaration
+        if (lastNode.properties.length === 0) {
+          this.configuration =
+            this.configuration.slice(0, lastNode.range[0]) +
+            '{' +
+            declaration +
+            '}' +
+            this.configuration.slice(lastNode.range[1])
+        }
+
+        // The object contains other properties, prepend our new one at the beginning
+        else {
+          this.configuration =
+            this.configuration.slice(0, lastNode.properties[0].range[0]) +
+            declaration +
+            ',' +
+            this.configuration.slice(lastNode.properties[0].range[0])
+        }
+      }
+
+      // A misc object was found in the configuration file (e.g. an array, a string, a boolean,
+      // a number, etc.), just replace the whole range by our declaration
+      else {
+        this.configuration =
+          this.configuration.slice(0, lastNode.range[0]) +
+          declaration +
+          this.configuration.slice(lastNode.range[1])
+      }
+    }
 
     // Format the updated configuration with prettier's default settings
-    this.config = prettier.format(this.config, {
-      filePath: this.staticSiteConfig.filePath,
-      parser: 'babel' /* default ot javascript for when filePath is nil */
+    this.configuration = prettier.format(this.configuration, {
+      parser: 'espree',
+
+      // Matching this repo's prettier configuration
+      printWidth: 80,
+      tabWidth: 2,
+      useTabs: false,
+      semi: false,
+      singleQuote: true,
+      trailingComma: 'none',
+      bracketSpacing: false,
+      arrowParens: 'avoid'
     })
 
-    // Return the new configuration
-    return this.config
-  }
+    // Logging
+    core.info(`Parsing configuration:\n${this.configuration}`)
 
-  getPropertyModuleExport(exportNode) {
-    var propertyNode = exportNode.expression.right.properties.find(
-      node =>
-        node.key.type === 'Identifier' &&
-        node.key.name === this.staticSiteConfig.pathName
-    )
-
-    if (!propertyNode) {
-      core.info(
-        'Unable to find property, insert it :  ' +
-          this.staticSiteConfig.pathName
-      )
-      if (exportNode.expression.right.properties.length > 0) {
-        this.config =
-          this.config.slice(
-            0,
-            exportNode.expression.right.properties[0].range[0]
-          ) +
-          this.generateConfigProperty() +
-          ',' +
-          this.config.slice(exportNode.expression.right.properties[0].range[0])
-        core.info('new config = \n' + this.config)
-      } else {
-        this.config =
-          this.config.slice(0, exportNode.expression.right.range[0] + 1) +
-          this.generateConfigProperty() +
-          this.config.slice(exportNode.expression.right.range[1] - 1)
-        core.info('new config = \n' + this.config)
-      }
-    }
-    return propertyNode
-  }
-
-  getPropertyExportDefault(exportNode) {
-    var propertyNode = exportNode.declaration.properties.find(
-      node =>
-        node.key.type === 'Identifier' &&
-        node.key.name === this.staticSiteConfig.pathName
-    )
-
-    if (!propertyNode) {
-      core.info(
-        'Unable to find property, insert it ' + this.staticSiteConfig.pathName
-      )
-      if (exportNode.declaration.properties.length > 0) {
-        this.config =
-          this.config.slice(0, exportNode.declaration.properties[0].range[0]) +
-          this.generateConfigProperty() +
-          ',' +
-          this.config.slice(exportNode.declaration.properties[0].range[0])
-        core.info('new config = \n' + this.config)
-      } else {
-        this.config =
-          this.config.slice(0, exportNode.declaration.range[0] + 1) +
-          this.generateConfigProperty() +
-          this.config.slice(exportNode.declaration.range[1] - 1)
-        core.info('new config = \n' + this.config)
-      }
-    }
-
-    return propertyNode
-  }
-
-  parseNuxt(propertyNode) {
-    // Find the base node
-    if (propertyNode && propertyNode.value.type === 'ObjectExpression') {
-      var baseNode = propertyNode.value.properties.find(
-        node =>
-          node.key.type === 'Identifier' &&
-          node.key.name === this.staticSiteConfig.subPathName
-      ) //'base')
-      if (baseNode) {
-        // Swap the base value by a hardcoded string and print it
-        this.config =
-          this.config.slice(0, baseNode.value.range[0]) +
-          `'${this.staticSiteConfig.newPath}'` +
-          this.config.slice(baseNode.value.range[1])
-      }
-    }
-  }
-
-  parseNextGatsby(pathNode) {
-    if (pathNode) {
-      this.config =
-        this.config.slice(0, pathNode.value.range[0]) +
-        `'${this.staticSiteConfig.newPath}'` +
-        this.config.slice(pathNode.value.range[1])
-    }
+    // Finally write the new configuration in the file
+    fs.writeFileSync(this.configurationFile, this.configuration, {
+      encoding: 'utf8'
+    })
   }
 }
 

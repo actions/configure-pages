@@ -12,76 +12,73 @@ const cases = [
   [
     'next.config.js',
     {
-      filePath: `${tmpFolder}/next.config.js`,
-      type: 'next',
-      pathName: 'basePath',
-      newPath: repoPath
+      configurationFile: `${tmpFolder}/next.config.js`,
+      propertyName: 'basePath',
+      propertyValue: repoPath,
+      blankConfigurationFile: `${process.cwd()}/src/blank-configurations/next.js`
     }
   ],
   [
     'next.config.old.js',
     {
-      filePath: `${tmpFolder}/next.config.old.js`,
-      type: 'next',
-      pathName: 'basePath',
-      newPath: repoPath
+      configurationFile: `${tmpFolder}/next.config.old.js`,
+      propertyName: 'basePath',
+      propertyValue: repoPath,
+      blankConfigurationFile: `${process.cwd()}/src/blank-configurations/next.js`
     }
   ],
   [
     'next.config.old.missing.js',
     {
-      filePath: `${tmpFolder}/next.config.old.missing.js`,
-      type: 'next',
-      pathName: 'basePath',
-      newPath: repoPath
+      configurationFile: `${tmpFolder}/next.config.old.missing.js`,
+      propertyName: 'basePath',
+      propertyValue: repoPath,
+      blankConfigurationFile: `${process.cwd()}/src/blank-configurations/next.js`
     }
   ],
   [
     'gatsby-config.js',
     {
-      filePath: `${tmpFolder}/gatsby-config.js`,
-      type: 'gatsby',
-      pathName: 'pathPrefix',
-      newPath: repoPath
+      configurationFile: `${tmpFolder}/gatsby-config.js`,
+      propertyName: 'pathPrefix',
+      propertyValue: repoPath,
+      blankConfigurationFile: `${process.cwd()}/src/blank-configurations/gatsby.js`
     }
   ],
   [
     'gatsby-config.old.js',
     {
-      filePath: `${tmpFolder}/gatsby-config.old.js`,
-      type: 'gatsby',
-      pathName: 'pathPrefix',
-      newPath: repoPath
+      configurationFile: `${tmpFolder}/gatsby-config.old.js`,
+      propertyName: 'pathPrefix',
+      propertyValue: repoPath,
+      blankConfigurationFile: `${process.cwd()}/src/blank-configurations/gatsby.js`
     }
   ],
   [
     'nuxt.config.js',
     {
-      filePath: `${tmpFolder}/nuxt.config.js`,
-      type: 'nuxt',
-      pathName: 'router',
-      subPathName: 'base',
-      newPath: repoPath
+      configurationFile: `${tmpFolder}/nuxt.config.js`,
+      propertyName: 'router.base',
+      propertyValue: repoPath,
+      blankConfigurationFile: `${process.cwd()}/src/blank-configurations/nuxt.js`
     }
   ],
   [
     'nuxt.config.missing.js',
     {
-      filePath: `${tmpFolder}/nuxt.config.missing.js`,
-      type: 'nuxt',
-      pathName: 'router',
-      subPathName: 'base',
-      newPath: repoPath
+      configurationFile: `${tmpFolder}/nuxt.config.missing.js`,
+      propertyName: 'router.base',
+      propertyValue: repoPath,
+      blankConfigurationFile: `${process.cwd()}/src/blank-configurations/nuxt.js`
     }
   ],
   [
     'nuxt.config.old.js',
     {
-      filePath: `${tmpFolder}/nuxt.config.old.js`,
-      type: 'nuxt',
-      pathName: 'router',
-      subPathName: 'base',
-      newPath: repoPath
+      configurationFile: `${tmpFolder}/nuxt.config.old.js`,
+      propertyName: 'router.base',
+      propertyValue: repoPath,
+      blankConfigurationFile: `${process.cwd()}/src/blank-configurations/nuxt.js`
     }
   ]
 ]
