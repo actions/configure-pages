@@ -14537,8 +14537,8 @@ const core = __nccwpck_require__(2186)
 // Parse the AST
 const espreeOptions = {
   ecmaVersion: 6,
-  sourceType: "module",
-  range: true,
+  sourceType: 'module',
+  range: true
 }
 
 class ConfigParser {
@@ -14548,7 +14548,9 @@ class ConfigParser {
     this.pathPropertyGatsby = `pathPrefix: '{0}'`
     this.configskeleton = `export default {\n    {0}\n}`
     this.staticSiteConfig = staticSiteConfig
-    this.config = fs.existsSync(this.staticSiteConfig.filePath) ? fs.readFileSync(this.staticSiteConfig.filePath, "utf8") : null
+    this.config = fs.existsSync(this.staticSiteConfig.filePath)
+      ? fs.readFileSync(this.staticSiteConfig.filePath, 'utf8')
+      : null
     this.validate()
   }
 
@@ -14564,62 +14566,72 @@ class ConfigParser {
 
   generateConfigFile() {
     switch (this.staticSiteConfig.type) {
-      case "nuxt":
-        return format(this.configskeleton, format(this.pathPropertyNuxt, this.staticSiteConfig.newPath))
+      case 'nuxt':
+        return format(
+          this.configskeleton,
+          format(this.pathPropertyNuxt, this.staticSiteConfig.newPath)
+        )
         break
-      case "next":
-        return format(this.configskeleton, format(this.pathPropertyNext, this.staticSiteConfig.newPath))
+      case 'next':
+        return format(
+          this.configskeleton,
+          format(this.pathPropertyNext, this.staticSiteConfig.newPath)
+        )
         break
-      case "gatsby":
-        return format(this.configskeleton, format(this.pathPropertyGatsby, this.staticSiteConfig.newPath))
+      case 'gatsby':
+        return format(
+          this.configskeleton,
+          format(this.pathPropertyGatsby, this.staticSiteConfig.newPath)
+        )
         break
       default:
-        throw "Unknown config type"
+        throw 'Unknown config type'
     }
   }
 
   generateConfigProperty() {
     switch (this.staticSiteConfig.type) {
-      case "nuxt":
+      case 'nuxt':
         return format(this.pathPropertyNuxt, this.staticSiteConfig.newPath)
         break
-      case "next":
+      case 'next':
         return format(this.pathPropertyNext, this.staticSiteConfig.newPath)
         break
-      case "gatsby":
+      case 'gatsby':
         return format(this.pathPropertyGatsby, this.staticSiteConfig.newPath)
         break
       default:
-        throw "Unknown config type"
+        throw 'Unknown config type'
     }
   }
 
   parse() {
     core.info(`original configuration:\n${this.config}`)
-    const ast = espree.parse(this.config, espreeOptions);
+    const ast = espree.parse(this.config, espreeOptions)
 
     // Find the default export declaration node
     var exportNode = ast.body.find(node => node.type === 'ExpressionStatement')
     if (exportNode) {
       var property = this.getPropertyModuleExport(exportNode)
-
     } else {
-      exportNode = ast.body.find(node => node.type === 'ExportDefaultDeclaration')
-      if (!exportNode) throw "Unable to find default export"
+      exportNode = ast.body.find(
+        node => node.type === 'ExportDefaultDeclaration'
+      )
+      if (!exportNode) throw 'Unable to find default export'
       var property = this.getPropertyExportDefault(exportNode)
     }
 
     if (property) {
       switch (this.staticSiteConfig.type) {
-        case "nuxt":
+        case 'nuxt':
           this.parseNuxt(property)
           break
-        case "next":
-        case "gatsby":
+        case 'next':
+        case 'gatsby':
           this.parseNextGatsby(property)
           break
         default:
-          throw "Unknown config type"
+          throw 'Unknown config type'
       }
     }
     core.info(`parsed configuration:\n${this.config}`)
@@ -14629,18 +14641,34 @@ class ConfigParser {
 
   getPropertyModuleExport(exportNode) {
     var propertyNode = exportNode.expression.right.properties.find(
-      node => node.key.type === 'Identifier' && node.key.name === this.staticSiteConfig.pathName
+      node =>
+        node.key.type === 'Identifier' &&
+        node.key.name === this.staticSiteConfig.pathName
     )
 
     if (!propertyNode) {
-
-      core.info("Unable to find property, insert it :  " + this.staticSiteConfig.pathName)
+      core.info(
+        'Unable to find property, insert it :  ' +
+          this.staticSiteConfig.pathName
+      )
       if (exportNode.expression.right.properties.length > 0) {
-       this.config = this.config.slice(0, exportNode.expression.right.properties[0].range[0]) + this.generateConfigProperty() + ',\n' + this.config.slice(exportNode.expression.right.properties[0].range[0])
-        core.info("new config = \n" + this.config)
+        this.config =
+          this.config.slice(
+            0,
+            exportNode.expression.right.properties[0].range[0]
+          ) +
+          this.generateConfigProperty() +
+          ',\n' +
+          this.config.slice(exportNode.expression.right.properties[0].range[0])
+        core.info('new config = \n' + this.config)
       } else {
-       this.config = this.config.slice(0, exportNode.expression.right.range[0] + 1) + '\n    ' + this.generateConfigProperty() + '\n' + this.config.slice(exportNode.expression.right.range[1] - 1)
-        core.info("new config = \n" + this.config)
+        this.config =
+          this.config.slice(0, exportNode.expression.right.range[0] + 1) +
+          '\n    ' +
+          this.generateConfigProperty() +
+          '\n' +
+          this.config.slice(exportNode.expression.right.range[1] - 1)
+        core.info('new config = \n' + this.config)
       }
     }
     return propertyNode
@@ -14648,18 +14676,30 @@ class ConfigParser {
 
   getPropertyExportDefault(exportNode) {
     var propertyNode = exportNode.declaration.properties.find(
-      node => node.key.type === 'Identifier' && node.key.name === this.staticSiteConfig.pathName
+      node =>
+        node.key.type === 'Identifier' &&
+        node.key.name === this.staticSiteConfig.pathName
     )
 
     if (!propertyNode) {
-
-      core.info("Unable to find property, insert it " + this.staticSiteConfig.pathName)
+      core.info(
+        'Unable to find property, insert it ' + this.staticSiteConfig.pathName
+      )
       if (exportNode.declaration.properties.length > 0) {
-        this.config = this.config.slice(0, exportNode.declaration.properties[0].range[0]) + this.generateConfigProperty() + ',\n' + this.config.slice(exportNode.declaration.properties[0].range[0])
-        core.info("new config = \n" + this.config)
+        this.config =
+          this.config.slice(0, exportNode.declaration.properties[0].range[0]) +
+          this.generateConfigProperty() +
+          ',\n' +
+          this.config.slice(exportNode.declaration.properties[0].range[0])
+        core.info('new config = \n' + this.config)
       } else {
-        this.config = this.config.slice(0, exportNode.declaration.range[0] + 1) + '\n    ' + this.generateConfigProperty() + '\n' + this.config.slice(exportNode.declaration.range[1] - 1)
-        core.info("new config = \n" + this.config)
+        this.config =
+          this.config.slice(0, exportNode.declaration.range[0] + 1) +
+          '\n    ' +
+          this.generateConfigProperty() +
+          '\n' +
+          this.config.slice(exportNode.declaration.range[1] - 1)
+        core.info('new config = \n' + this.config)
       }
     }
 
@@ -14669,22 +14709,33 @@ class ConfigParser {
   parseNuxt(propertyNode) {
     // Find the base node
     if (propertyNode && propertyNode.value.type === 'ObjectExpression') {
-      var baseNode = propertyNode.value.properties.find(node => node.key.type === 'Identifier' && node.key.name === this.staticSiteConfig.subPathName)//'base')
+      var baseNode = propertyNode.value.properties.find(
+        node =>
+          node.key.type === 'Identifier' &&
+          node.key.name === this.staticSiteConfig.subPathName
+      ) //'base')
       if (baseNode) {
         // Swap the base value by a hardcoded string and print it
-        this.config = this.config.slice(0, baseNode.value.range[0]) + `'${this.staticSiteConfig.newPath}'` + this.config.slice(baseNode.value.range[1])
+        this.config =
+          this.config.slice(0, baseNode.value.range[0]) +
+          `'${this.staticSiteConfig.newPath}'` +
+          this.config.slice(baseNode.value.range[1])
       }
     }
   }
 
   parseNextGatsby(pathNode) {
     if (pathNode) {
-      this.config = this.config.slice(0, pathNode.value.range[0]) + `'${this.staticSiteConfig.newPath}'` + this.config.slice(pathNode.value.range[1])
+      this.config =
+        this.config.slice(0, pathNode.value.range[0]) +
+        `'${this.staticSiteConfig.newPath}'` +
+        this.config.slice(pathNode.value.range[1])
     }
   }
 }
 
 module.exports = {ConfigParser}
+
 
 /***/ }),
 
@@ -14722,19 +14773,19 @@ module.exports = function getContext() {
 const core = __nccwpck_require__(2186)
 const axios = __nccwpck_require__(6545)
 
-async function enablePages({ repositoryNwo, githubToken }) {
+async function enablePages({repositoryNwo, githubToken}) {
   const pagesEndpoint = `https://api.github.com/repos/${repositoryNwo}/pages`
 
   try {
     const response = await axios.post(
       pagesEndpoint,
-      { build_type: 'workflow' },
+      {build_type: 'workflow'},
       {
         headers: {
           Accept: 'application/vnd.github.v3+json',
           Authorization: `Bearer ${githubToken}`,
-          'Content-type': 'application/json',
-        },
+          'Content-type': 'application/json'
+        }
       }
     )
     core.info('Created pages site')
@@ -14744,7 +14795,7 @@ async function enablePages({ repositoryNwo, githubToken }) {
       return
     }
 
-    core.error('Couldn\'t create pages site', error)
+    core.error("Couldn't create pages site", error)
     throw error
   }
 }
@@ -14761,26 +14812,27 @@ const core = __nccwpck_require__(2186)
 const axios = __nccwpck_require__(6545)
 const setPagesPath = __nccwpck_require__(4770)
 
-async function getPagesBaseUrl({ repositoryNwo, githubToken, staticSiteGenerator}) {
+async function getPagesBaseUrl({
+  repositoryNwo,
+  githubToken,
+  staticSiteGenerator
+}) {
   try {
     const pagesEndpoint = `https://api.github.com/repos/${repositoryNwo}/pages`
 
     core.info(`Get the Base URL to the page with endpoint ${pagesEndpoint}`)
-    const response = await axios.get(
-      pagesEndpoint,
-      {
-        headers: {
-          Accept: 'application/vnd.github.v3+json',
-          Authorization: `Bearer ${githubToken}`
-        }
+    const response = await axios.get(pagesEndpoint, {
+      headers: {
+        Accept: 'application/vnd.github.v3+json',
+        Authorization: `Bearer ${githubToken}`
       }
-    )
+    })
 
     pageObject = response.data
     core.info(JSON.stringify(pageObject))
 
     const siteUrl = new URL(pageObject.html_url)
-    if ( staticSiteGenerator ) {
+    if (staticSiteGenerator) {
       setPagesPath({staticSiteGenerator, path: siteUrl.pathname})
     }
     core.setOutput('base_url', siteUrl.href)
@@ -14803,46 +14855,47 @@ module.exports = getPagesBaseUrl
 
 const core = __nccwpck_require__(2186)
 const axios = __nccwpck_require__(6545)
-const { ConfigParser } = __nccwpck_require__(8395)
+const {ConfigParser} = __nccwpck_require__(8395)
 
 async function setPagesPath({staticSiteGenerator, path}) {
   try {
-    switch(staticSiteGenerator)
-    {
+    switch (staticSiteGenerator) {
       case 'nuxt':
         var ssConfig = {
-          filePath:"./nuxt.config.js",
-          type: "nuxt",
-          pathName: "router",
-          subPathName: "base",
+          filePath: './nuxt.config.js',
+          type: 'nuxt',
+          pathName: 'router',
+          subPathName: 'base',
           newPath: path
         }
-        break;
+        break
       case 'next':
         var ssConfig = {
-          filePath:"./next.config.js",
-          type: "next",
-          pathName: "basePath",
+          filePath: './next.config.js',
+          type: 'next',
+          pathName: 'basePath',
           newPath: path
         }
-        break;
+        break
       case 'gatsby':
         var ssConfig = {
-          filePath: "./gatsby-config.js",
-          type: "gatsby",
-          pathName: "pathPrefix",
+          filePath: './gatsby-config.js',
+          type: 'gatsby',
+          pathName: 'pathPrefix',
           newPath: path
         }
-        break;
+        break
       default:
-        throw "Unknown config type"
+        throw 'Unknown config type'
     }
 
     let configParser = new ConfigParser(ssConfig)
     configParser.parse()
-
   } catch (error) {
-    core.warning(`We were unable to determine how to inject the site metadata into your config. Generated URLs may be incorrect. The base URL for this site should be ${path}. Please ensure your framework is configured to generate relative links appropriately.`, error)
+    core.warning(
+      `We were unable to determine how to inject the site metadata into your config. Generated URLs may be incorrect. The base URL for this site should be ${path}. Please ensure your framework is configured to generate relative links appropriately.`,
+      error
+    )
   }
 }
 
@@ -16345,7 +16398,6 @@ async function main() {
     process.exit(1)
   }
 }
-
 
 // Main
 main()
