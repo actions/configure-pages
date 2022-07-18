@@ -11,7 +11,9 @@ describe('getPagesBaseUrl', () => {
   beforeEach(() => {
     jest.restoreAllMocks()
 
-    jest.spyOn(core, 'setOutput').mockImplementation((key, value) => { key, value })
+    jest.spyOn(core, 'setOutput').mockImplementation((key, value) => {
+      key, value
+    })
     jest.spyOn(core, 'setFailed').mockImplementation(param => param)
 
     // Mock error/warning/info/debug
@@ -26,12 +28,20 @@ describe('getPagesBaseUrl', () => {
 
     jest
       .spyOn(axios, 'get')
-      .mockImplementationOnce(() => Promise.resolve({ data: { html_url: baseUrl } }))
+      .mockImplementationOnce(() =>
+        Promise.resolve({data: {html_url: baseUrl}})
+      )
 
-    await getPagesBaseUrl({ repositoryNwo: GITHUB_REPOSITORY, githubToken: GITHUB_TOKEN })
+    await getPagesBaseUrl({
+      repositoryNwo: GITHUB_REPOSITORY,
+      githubToken: GITHUB_TOKEN
+    })
 
     expect(core.setOutput).toHaveBeenCalledWith('base_url', baseUrl)
-    expect(core.setOutput).toHaveBeenCalledWith('origin', 'https://octocat.github.io')
+    expect(core.setOutput).toHaveBeenCalledWith(
+      'origin',
+      'https://octocat.github.io'
+    )
     expect(core.setOutput).toHaveBeenCalledWith('host', 'octocat.github.io')
     expect(core.setOutput).toHaveBeenCalledWith('base_path', '/')
   })
@@ -41,12 +51,20 @@ describe('getPagesBaseUrl', () => {
 
     jest
       .spyOn(axios, 'get')
-      .mockImplementationOnce(() => Promise.resolve({ data: { html_url: baseUrl } }))
+      .mockImplementationOnce(() =>
+        Promise.resolve({data: {html_url: baseUrl}})
+      )
 
-    await getPagesBaseUrl({ repositoryNwo: GITHUB_REPOSITORY, githubToken: GITHUB_TOKEN })
+    await getPagesBaseUrl({
+      repositoryNwo: GITHUB_REPOSITORY,
+      githubToken: GITHUB_TOKEN
+    })
 
     expect(core.setOutput).toHaveBeenCalledWith('base_url', baseUrl)
-    expect(core.setOutput).toHaveBeenCalledWith('origin', 'https://octocat.github.io')
+    expect(core.setOutput).toHaveBeenCalledWith(
+      'origin',
+      'https://octocat.github.io'
+    )
     expect(core.setOutput).toHaveBeenCalledWith('host', 'octocat.github.io')
     expect(core.setOutput).toHaveBeenCalledWith('base_path', '/my-repo/')
   })
@@ -56,12 +74,20 @@ describe('getPagesBaseUrl', () => {
 
     jest
       .spyOn(axios, 'get')
-      .mockImplementationOnce(() => Promise.resolve({ data: { html_url: baseUrl } }))
+      .mockImplementationOnce(() =>
+        Promise.resolve({data: {html_url: baseUrl}})
+      )
 
-    await getPagesBaseUrl({ repositoryNwo: GITHUB_REPOSITORY, githubToken: GITHUB_TOKEN })
+    await getPagesBaseUrl({
+      repositoryNwo: GITHUB_REPOSITORY,
+      githubToken: GITHUB_TOKEN
+    })
 
     expect(core.setOutput).toHaveBeenCalledWith('base_url', baseUrl)
-    expect(core.setOutput).toHaveBeenCalledWith('origin', 'https://www.example.com')
+    expect(core.setOutput).toHaveBeenCalledWith(
+      'origin',
+      'https://www.example.com'
+    )
     expect(core.setOutput).toHaveBeenCalledWith('host', 'www.example.com')
     expect(core.setOutput).toHaveBeenCalledWith('base_path', '/')
   })
