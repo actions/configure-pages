@@ -1,9 +1,8 @@
-
-import { resolve } from 'path'
+import {resolve} from 'path'
 
 export default {
   alias: {
-    'style': resolve(__dirname, './assets/style')
+    style: resolve(__dirname, './assets/style')
   },
-  basePath: '/gh-pages-test'/* test */,
+  basePath: '/gh-pages-test' /* test */
 }
