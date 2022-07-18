@@ -1,7 +1,6 @@
-
-module.exports={
+module.exports = {
   alias: {
-    'style': resolve(__dirname, './assets/style')
+    style: resolve(__dirname, './assets/style')
   },
   target: 'static',
   router: {

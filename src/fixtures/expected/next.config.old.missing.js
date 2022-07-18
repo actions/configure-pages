@@ -1,3 +1,1 @@
-module.exports = {
-  basePath: '/amazing-new-repo/'
-}
+module.exports = {basePath: '/amazing-new-repo/'}

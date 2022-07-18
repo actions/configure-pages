@@ -1,6 +1,7 @@
 const fs = require('fs')
 const espree = require('espree')
 const format = require('string-format')
+const prettier = require('prettier')
 const core = require('@actions/core')
 
 // Parse the AST
@@ -12,10 +13,10 @@ const espreeOptions = {
 
 class ConfigParser {
   constructor(staticSiteConfig) {
-    this.pathPropertyNuxt = `router: {\n        base: '{0}'\n    }`
+    this.pathPropertyNuxt = `router: { base: '{0}' }`
     this.pathPropertyNext = `basePath: '{0}'`
     this.pathPropertyGatsby = `pathPrefix: '{0}'`
-    this.configskeleton = `export default {\n    {0}\n}`
+    this.configskeleton = `export default { {0} }`
     this.staticSiteConfig = staticSiteConfig
     this.config = fs.existsSync(this.staticSiteConfig.filePath)
       ? fs.readFileSync(this.staticSiteConfig.filePath, 'utf8')
@@ -40,19 +41,16 @@ class ConfigParser {
           this.configskeleton,
           format(this.pathPropertyNuxt, this.staticSiteConfig.newPath)
         )
-        break
       case 'next':
         return format(
           this.configskeleton,
           format(this.pathPropertyNext, this.staticSiteConfig.newPath)
         )
-        break
       case 'gatsby':
         return format(
           this.configskeleton,
           format(this.pathPropertyGatsby, this.staticSiteConfig.newPath)
         )
-        break
       default:
         throw 'Unknown config type'
     }
@@ -62,20 +60,20 @@ class ConfigParser {
     switch (this.staticSiteConfig.type) {
       case 'nuxt':
         return format(this.pathPropertyNuxt, this.staticSiteConfig.newPath)
-        break
       case 'next':
         return format(this.pathPropertyNext, this.staticSiteConfig.newPath)
-        break
       case 'gatsby':
         return format(this.pathPropertyGatsby, this.staticSiteConfig.newPath)
-        break
       default:
         throw 'Unknown config type'
     }
   }
 
   parse() {
+    // Print current configuration
     core.info(`original configuration:\n${this.config}`)
+
+    // Parse the AST
     const ast = espree.parse(this.config, espreeOptions)
 
     // Find the default export declaration node
@@ -103,8 +101,18 @@ class ConfigParser {
           throw 'Unknown config type'
       }
     }
+
+    // Write down the updated configuration
     core.info(`parsed configuration:\n${this.config}`)
     fs.writeFileSync(this.staticSiteConfig.filePath, this.config)
+
+    // Format the updated configuration with prettier's default settings
+    this.config = prettier.format(this.config, {
+      filePath: this.staticSiteConfig.filePath,
+      parser: 'babel' /* default ot javascript for when filePath is nil */
+    })
+
+    // Return the new configuration
     return this.config
   }
 
@@ -127,15 +135,13 @@ class ConfigParser {
             exportNode.expression.right.properties[0].range[0]
           ) +
           this.generateConfigProperty() +
-          ',\n' +
+          ',' +
           this.config.slice(exportNode.expression.right.properties[0].range[0])
         core.info('new config = \n' + this.config)
       } else {
         this.config =
           this.config.slice(0, exportNode.expression.right.range[0] + 1) +
-          '\n    ' +
           this.generateConfigProperty() +
-          '\n' +
           this.config.slice(exportNode.expression.right.range[1] - 1)
         core.info('new config = \n' + this.config)
       }
@@ -158,15 +164,13 @@ class ConfigParser {
         this.config =
           this.config.slice(0, exportNode.declaration.properties[0].range[0]) +
           this.generateConfigProperty() +
-          ',\n' +
+          ',' +
           this.config.slice(exportNode.declaration.properties[0].range[0])
         core.info('new config = \n' + this.config)
       } else {
         this.config =
           this.config.slice(0, exportNode.declaration.range[0] + 1) +
-          '\n    ' +
           this.generateConfigProperty() +
-          '\n' +
           this.config.slice(exportNode.declaration.range[1] - 1)
         core.info('new config = \n' + this.config)
       }

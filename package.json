@@ -22,6 +22,7 @@
     "axios": "^0.27.2",
     "axios-retry": "^3.2.5",
     "espree": "^9.3.2",
+    "prettier": "^2.7.1",
     "string-format": "^1.0.0"
   },
   "devDependencies": {

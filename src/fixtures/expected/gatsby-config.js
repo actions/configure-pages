@@ -1,8 +1,8 @@
-import { resolve } from 'path'
+import {resolve} from 'path'
 
 export default {
   alias: {
-    'style': resolve(__dirname, './assets/style')
+    style: resolve(__dirname, './assets/style')
   },
-  pathPrefix: '/amazing-new-repo/',/* test */
+  pathPrefix: '/amazing-new-repo/' /* test */
 }
