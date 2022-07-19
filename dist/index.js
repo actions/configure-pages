@@ -14773,7 +14773,7 @@ module.exports = enablePages
 
 const core = __nccwpck_require__(2186)
 const axios = __nccwpck_require__(6545)
-const setPagesPath = __nccwpck_require__(4770)
+const {setPagesPath} = __nccwpck_require__(4770)
 
 async function getPagesBaseUrl({
   repositoryNwo,
