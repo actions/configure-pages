@@ -14632,9 +14632,9 @@ class ConfigParser {
       // The last node identified is an object expression, so do the assignment
       if (lastNode.type === 'ObjectExpression') {
         this.configuration =
-          this.configuration.slice(0, lastNode.value.range[0]) +
+          this.configuration.slice(0, lastNode.range[0]) +
           `"${this.propertyValue}"` +
-          this.configuration.slice(lastNode.value.range[1])
+          this.configuration.slice(lastNode.range[1])
       }
 
       // A misc object was found in the configuration file (e.g. an array, a string, a boolean,
@@ -14679,7 +14679,7 @@ class ConfigParser {
       else {
         this.configuration =
           this.configuration.slice(0, lastNode.range[0]) +
-          declaration +
+          '{' + declaration + '}' +
           this.configuration.slice(lastNode.range[1])
       }
     }

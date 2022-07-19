@@ -1,27 +1,12 @@
 const fs = require('fs')
-const assert = require('assert')
 const path = require('path')
-const prettier = require('prettier')
 
 const {getConfigParserSettings} = require('./set-pages-path')
 const {ConfigParser} = require('./config-parser')
+const {getTempFolder, compareFiles} = require('./test-helpers')
 
-// Temp folder for fixtures to be injected
-const tmpFolder = `${process.cwd()}/src/fixtures/tmp`
-if (!fs.existsSync(tmpFolder)) {
-  fs.mkdirSync(tmpFolder, {recursive: true})
-}
-
-// Read a JavaScript file and return it formatted
-function formatFile(file) {
-  const fileContent = fs.readFileSync(file, 'utf8')
-  return prettier.format(fileContent, {parser: 'espree'})
-}
-
-// Compare two JavaScript files
-function compareFiles(actualFile, expectedFile) {
-  assert.equal(formatFile(actualFile), formatFile(expectedFile))
-}
+// Get the temp folder
+const tempFolder = getTempFolder()
 
 // Test suite
 describe('configParser', () => {
@@ -43,7 +28,7 @@ describe('configParser', () => {
 
         // Copy the source fixture to a temp file
         const fixtureSourceFile = `${fixtureFolder}/${configurationFile}`
-        const fixtureTargetFile = `${tmpFolder}/${configurationFile}`
+        const fixtureTargetFile = `${tempFolder}/${configurationFile}`
         if (configurationFile != 'blank.js') {
           fs.copyFileSync(fixtureSourceFile, fixtureTargetFile)
         } else if (fs.existsSync(fixtureTargetFile)) {
