@@ -22,11 +22,11 @@
     "axios": "^0.27.2",
     "axios-retry": "^3.2.5",
     "espree": "^9.3.2",
-    "prettier": "^2.7.1",
     "string-format": "^1.0.0"
   },
   "devDependencies": {
     "@vercel/ncc": "^0.34.0",
-    "jest": "^28.1.1"
+    "jest": "^28.1.1",
+    "prettier": "^2.7.1"
   }
 }

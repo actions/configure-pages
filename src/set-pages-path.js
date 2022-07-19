@@ -1,39 +1,45 @@
 const core = require('@actions/core')
 const {ConfigParser} = require('./config-parser')
 
-function getParserConfiguration(staticSiteGenerator, path) {
+// Return the settings to be passed to a {ConfigParser} for a given
+// static site generator and a Pages path value to inject
+function getConfigParserSettings(staticSiteGenerator, path) {
   switch (staticSiteGenerator) {
     case 'nuxt':
       return {
         configurationFile: './nuxt.config.js',
         propertyName: 'router.base',
         propertyValue: path,
-        blankConfigurationFile: `${process.cwd()}/blank-configurations/nuxt.js`
+        blankConfigurationFile: `${__dirname}/blank-configurations/nuxt.js`
       }
     case 'next':
       return {
         configurationFile: './next.config.js',
         propertyName: 'basePath',
         propertyValue: path,
-        blankConfigurationFile: `${process.cwd()}/blank-configurations/next.js`
+        blankConfigurationFile: `${__dirname}/blank-configurations/next.js`
       }
     case 'gatsby':
       return {
         configurationFile: './gatsby-config.js',
         propertyName: 'pathPrefix',
         propertyValue: path,
-        blankConfigurationFile: `${process.cwd()}/blank-configurations/gatsby.js`
+        blankConfigurationFile: `${__dirname}/blank-configurations/gatsby.js`
       }
     default:
       throw `Unsupported static site generator: ${staticSiteGenerator}`
   }
 }
 
-async function setPagesPath({staticSiteGenerator, path}) {
+// Inject Pages configuration in a given static site generator's configuration file
+function setPagesPath({staticSiteGenerator, path}) {
   try {
-    // Parse/mutate the configuration file
-    new ConfigParser(getParserConfiguration(staticSiteGenerator, path)).parse()
+    // Parse the configuration file and try to inject the Pages configuration in it
+    new ConfigParser(
+      getConfigParserSettings(staticSiteGenerator, path)
+    ).inject()
   } catch (error) {
+    // Logging
     core.warning(
       `We were unable to determine how to inject the site metadata into your config. Generated URLs may be incorrect. The base URL for this site should be ${path}. Please ensure your framework is configured to generate relative links appropriately.`,
       error
@@ -41,4 +47,4 @@ async function setPagesPath({staticSiteGenerator, path}) {
   }
 }
 
-module.exports = setPagesPath
+module.exports = {getConfigParserSettings, setPagesPath}

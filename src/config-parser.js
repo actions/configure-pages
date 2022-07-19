@@ -158,7 +158,8 @@ class ConfigParser {
     }
   }
 
-  parse() {
+  // Parse a configuration file and try to inject Pages settings in it.
+  inject() {
     // Logging
     core.info(`Parsing configuration:\n${this.configuration}`)
 
