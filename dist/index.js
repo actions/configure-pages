@@ -16352,7 +16352,7 @@ const enablePages = __nccwpck_require__(5424)
 const getPagesBaseUrl = __nccwpck_require__(9965)
 
 // All variables we need from the runtime are loaded here
-const getContext = __nccwpck_require__(1319)
+const {getContext} = __nccwpck_require__(1319)
 
 async function main() {
   try {
