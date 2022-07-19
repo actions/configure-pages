@@ -255,23 +255,8 @@ class ConfigParser {
       }
     }
 
-    // Format the updated configuration with prettier's default settings
-    this.configuration = prettier.format(this.configuration, {
-      parser: 'espree',
-
-      // Matching this repo's prettier configuration
-      printWidth: 80,
-      tabWidth: 2,
-      useTabs: false,
-      semi: false,
-      singleQuote: true,
-      trailingComma: 'none',
-      bracketSpacing: false,
-      arrowParens: 'avoid'
-    })
-
     // Logging
-    core.info(`Parsing configuration:\n${this.configuration}`)
+    core.info(`Writing new configuration:\n${this.configuration}`)
 
     // Finally write the new configuration in the file
     fs.writeFileSync(this.configurationFile, this.configuration, {
