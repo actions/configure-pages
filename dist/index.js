@@ -14831,6 +14831,11 @@ function getConfigParserSettings(staticSiteGenerator, path) {
         blankConfigurationFile: __nccwpck_require__.ab + "nuxt.js"
       }
     case 'next':
+      // Next does not want a trailing slash
+      if (path.endsWith('/')) {
+        path = path.slice(0, -1)
+      }
+
       return {
         configurationFile: './next.config.js',
         propertyName: 'basePath',
