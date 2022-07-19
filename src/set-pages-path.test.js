@@ -46,7 +46,7 @@ describe('configParser', () => {
         const fixtureTargetFile = `${tmpFolder}/${configurationFile}`
         if (configurationFile != 'blank.js') {
           fs.copyFileSync(fixtureSourceFile, fixtureTargetFile)
-        } else {
+        } else if (fs.existsSync(fixtureTargetFile)) {
           fs.rmSync(fixtureTargetFile)
         }
 

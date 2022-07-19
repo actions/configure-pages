@@ -1,6 +1,5 @@
 const fs = require('fs')
 const espree = require('espree')
-const prettier = require('prettier')
 const core = require('@actions/core')
 
 /*
