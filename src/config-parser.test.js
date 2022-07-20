@@ -1,104 +1,156 @@
-const {ConfigParser} = require('./config-parser')
 const fs = require('fs')
-const assert = require('assert')
 
-const srcFolder = `${process.cwd()}/src/fixtures`
-const tmpFolder = `${process.cwd()}/src/fixtures/tmp`
-const expectedFolder = `${process.cwd()}/src/fixtures/expected`
+const {ConfigParser} = require('./config-parser')
+const {getTempFolder, compareFiles} = require('./test-helpers')
 
-const repoPath = '/amazing-new-repo/'
+// Get the temp folder
+const tempFolder = getTempFolder()
 
+// Cases to test
 const cases = [
-  [
-    'next.config.js',
-    {
-      filePath: `${tmpFolder}/next.config.js`,
-      type: 'next',
-      pathName: 'basePath',
-      newPath: repoPath
-    }
-  ],
-  [
-    'next.config.old.js',
-    {
-      filePath: `${tmpFolder}/next.config.old.js`,
-      type: 'next',
-      pathName: 'basePath',
-      newPath: repoPath
-    }
-  ],
-  [
-    'next.config.old.missing.js',
-    {
-      filePath: `${tmpFolder}/next.config.old.missing.js`,
-      type: 'next',
-      pathName: 'basePath',
-      newPath: repoPath
-    }
-  ],
-  [
-    'gatsby-config.js',
-    {
-      filePath: `${tmpFolder}/gatsby-config.js`,
-      type: 'gatsby',
-      pathName: 'pathPrefix',
-      newPath: repoPath
-    }
-  ],
-  [
-    'gatsby-config.old.js',
-    {
-      filePath: `${tmpFolder}/gatsby-config.old.js`,
-      type: 'gatsby',
-      pathName: 'pathPrefix',
-      newPath: repoPath
-    }
-  ],
-  [
-    'nuxt.config.js',
-    {
-      filePath: `${tmpFolder}/nuxt.config.js`,
-      type: 'nuxt',
-      pathName: 'router',
-      subPathName: 'base',
-      newPath: repoPath
-    }
-  ],
-  [
-    'nuxt.config.missing.js',
-    {
-      filePath: `${tmpFolder}/nuxt.config.missing.js`,
-      type: 'nuxt',
-      pathName: 'router',
-      subPathName: 'base',
-      newPath: repoPath
-    }
-  ],
-  [
-    'nuxt.config.old.js',
-    {
-      filePath: `${tmpFolder}/nuxt.config.old.js`,
-      type: 'nuxt',
-      pathName: 'router',
-      subPathName: 'base',
-      newPath: repoPath
-    }
-  ]
+  //
+  // Default export
+  //
+
+  {
+    property: 'property',
+    source: `export default {}`,
+    expected: `export default { property: "value" }`
+  },
+  {
+    property: 'property',
+    source: `export default { property: 0 }`, // property exists and is a number
+    expected: `export default { property: "value" }`
+  },
+  {
+    property: 'property',
+    source: `export default { property: false }`, // property exists and is a boolean
+    expected: `export default { property: "value" }`
+  },
+  {
+    property: 'property',
+    source: `export default { property: "test" }`, // property exists and is a string
+    expected: `export default { property: "value" }`
+  },
+  {
+    property: 'property',
+    source: `export default { property: [1,2] }`, // property exists and is an array
+    expected: `export default { property: "value" }`
+  },
+  {
+    property: 'property',
+    source: `export default { property: null }`, // property exists and is null
+    expected: `export default { property: "value" }`
+  },
+  {
+    property: 'property',
+    source: `export default { property: {}}`, // property exists and is an object
+    expected: `export default { property: "value" }`
+  },
+
+  // Deep properties (injection 1)
+  {
+    property: 'property.b.c',
+    source: `export default {}`,
+    expected: `export default { property: { b: { c: "value" }}}`
+  },
+  {
+    property: 'property.b.c',
+    source: `export default { property: 0 }`, // property exists and is a number
+    expected: `export default { property: { b: { c: "value" }}}`
+  },
+  {
+    property: 'property.b.c',
+    source: `export default { property: {}}`, // property exists and is an object
+    expected: `export default { property: { b: { c: "value" }}}`
+  },
+
+  // Deep properties (injection 2)
+  {
+    property: 'property.b.c',
+    source: `export default { property: { b: 0 }}`, // property exists and is a number
+    expected: `export default { property: { b: { c: "value" }}}`
+  },
+  {
+    property: 'property.b.c',
+    source: `export default { property: { b: {}}}`, // property exists and is an object
+    expected: `export default { property: { b: { c: "value" }}}`
+  },
+  {
+    property: 'property.b.c',
+    source: `export default { property: { b: { hello: 123}}}`, // property exists and is a non-empty object
+    expected: `export default { property: { b: { c: "value", hello: 123 }}}`
+  },
+
+  // Deep properties (existing properties)
+  {
+    property: 'a1.a2',
+    source: `export default { a2: false, a1: { a3: [12]}}`, // property exists and is a non-empty object
+    expected: `export default { a2: false, a1: { a2: "value", a3: [12]}}`
+  },
+
+  //
+  // Direct module exports
+  //
+  {
+    property: 'property',
+    source: `module.exports = {}`,
+    expected: `module.exports = { property: "value"}`
+  },
+  {
+    property: 'property',
+    source: `module.exports = { p1: 0}`,
+    expected: `module.exports = { property: "value", p1: 0}`
+  },
+  {
+    property: 'a.b.c',
+    source: `module.exports = { p1: 0}`,
+    expected: `module.exports = { a: { b: { c: "value" }}, p1: 0}`
+  },
+
+  //
+  // Indirect module exports
+  //
+  {
+    property: 'property',
+    source: `const config = {}; module.exports = config`,
+    expected: `const config = { property: "value"}; module.exports = config`
+  },
+  {
+    property: 'property',
+    source: `var config = {}; module.exports = config`,
+    expected: `var config = { property: "value"}; module.exports = config`
+  },
+  {
+    property: 'a.b.c',
+    source: `var config = {}; module.exports = config`,
+    expected: `var config = { a: { b: { c: "value"}}}; module.exports = config`
+  },
+  {
+    property: 'a.b.c',
+    source: `var config = { a: { b: [], c: "hello"}}; module.exports = config`,
+    expected: `var config = { a: { b: { c: "value"}, c: "hello"}}; module.exports = config`
+  }
 ]
 
-describe('configParser', () => {
-  test.each(cases)('%p parsed correctly', (fileName, configuration) => {
-    srcFileName = `${srcFolder}/${fileName}`
-    tmpFileName = `${tmpFolder}/${fileName}`
-    expectedFileName = `${expectedFolder}/${fileName}`
-    fs.mkdirSync(tmpFolder, {recursive: true})
-    fs.copyFileSync(srcFileName, tmpFileName)
-    const parser = new ConfigParser(configuration)
-    parser.parse()
+describe('config-parser', () => {
+  cases.forEach(({property, source, expected}, index) => {
+    it(`Inject path properly for case #${index}`, () => {
+      // Write the source file
+      const sourceFile = `${tempFolder}/source.js`
+      fs.writeFileSync(sourceFile, source, {encoding: 'utf8'})
 
-    var expectedContent = fs.readFileSync(expectedFileName).toString()
-    var actualContent = fs.readFileSync(tmpFileName).toString()
-    assert.equal(actualContent, expectedContent)
-    fs.rmSync(tmpFileName)
+      // Write the expected file
+      const expectedFile = `${tempFolder}/expected.js`
+      fs.writeFileSync(expectedFile, expected, {encoding: 'utf8'})
+
+      // Update the settings and do the injection
+      new ConfigParser({
+        configurationFile: sourceFile
+      }).inject(property, 'value')
+
+      // Compare the files
+      compareFiles(sourceFile, expectedFile)
+    })
   })
 })

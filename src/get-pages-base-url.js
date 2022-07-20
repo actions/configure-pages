@@ -1,6 +1,6 @@
 const core = require('@actions/core')
 const axios = require('axios')
-const setPagesPath = require('./set-pages-path')
+const {setPagesPath} = require('./set-pages-path')
 
 async function getPagesBaseUrl({
   repositoryNwo,

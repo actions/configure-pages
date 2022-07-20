@@ -1,6 +1,5 @@
 const core = require('@actions/core')
 const axios = require('axios')
-//const { expect, jest } = require('@jest/globals')
 
 const getPagesBaseUrl = require('./get-pages-base-url')
 

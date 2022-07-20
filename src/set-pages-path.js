@@ -1,42 +1,56 @@
 const core = require('@actions/core')
-const axios = require('axios')
 const {ConfigParser} = require('./config-parser')
 
-async function setPagesPath({staticSiteGenerator, path}) {
-  try {
-    switch (staticSiteGenerator) {
-      case 'nuxt':
-        var ssConfig = {
-          filePath: './nuxt.config.js',
-          type: 'nuxt',
-          pathName: 'router',
-          subPathName: 'base',
-          newPath: path
+// Return the settings to be passed to a {ConfigParser} for a given
+// static site generator and a Pages path value to inject
+function getConfigParserSettings(staticSiteGenerator, path) {
+  switch (staticSiteGenerator) {
+    case 'nuxt':
+      return {
+        configurationFile: './nuxt.config.js',
+        blankConfigurationFile: `${__dirname}/blank-configurations/nuxt.js`,
+        properties: {
+          'router.base': path
         }
-        break
-      case 'next':
-        var ssConfig = {
-          filePath: './next.config.js',
-          type: 'next',
-          pathName: 'basePath',
-          newPath: path
-        }
-        break
-      case 'gatsby':
-        var ssConfig = {
-          filePath: './gatsby-config.js',
-          type: 'gatsby',
-          pathName: 'pathPrefix',
-          newPath: path
-        }
-        break
-      default:
-        throw 'Unknown config type'
-    }
+      }
+    case 'next':
+      // Next does not want a trailing slash
+      if (path.endsWith('/')) {
+        path = path.slice(0, -1)
+      }
 
-    let configParser = new ConfigParser(ssConfig)
-    configParser.parse()
+      return {
+        configurationFile: './next.config.js',
+        blankConfigurationFile: `${__dirname}/blank-configurations/next.js`,
+        properties: {
+          basePath: path,
+
+          // Disable server side image optimization too
+          // https://nextjs.org/docs/api-reference/next/image#unoptimized
+          'experimental.images.unoptimized': true
+        }
+      }
+    case 'gatsby':
+      return {
+        configurationFile: './gatsby-config.js',
+        blankConfigurationFile: `${__dirname}/blank-configurations/gatsby.js`,
+        properties: {
+          pathPrefix: path
+        }
+      }
+    default:
+      throw `Unsupported static site generator: ${staticSiteGenerator}`
+  }
+}
+
+// Inject Pages configuration in a given static site generator's configuration file
+function setPagesPath({staticSiteGenerator, path}) {
+  try {
+    // Parse the configuration file and try to inject the Pages configuration in it
+    const settings = getConfigParserSettings(staticSiteGenerator, path)
+    new ConfigParser(settings).injectAll()
   } catch (error) {
+    // Logging
     core.warning(
       `We were unable to determine how to inject the site metadata into your config. Generated URLs may be incorrect. The base URL for this site should be ${path}. Please ensure your framework is configured to generate relative links appropriately.`,
       error
@@ -44,4 +58,4 @@ async function setPagesPath({staticSiteGenerator, path}) {
   }
 }
 
-module.exports = setPagesPath
+module.exports = {getConfigParserSettings, setPagesPath}
