@@ -38,7 +38,7 @@ class ConfigParser {
 
     // If the configuration file does not exist, initialize it with the blank configuration file
     if (!fs.existsSync(this.configurationFile)) {
-      core.info('Use default blank configuration')
+      core.info('Using default blank configuration')
       const blankConfiguration = fs.readFileSync(blankConfigurationFile, 'utf8')
       fs.writeFileSync(this.configurationFile, blankConfiguration, {
         encoding: 'utf8'
@@ -46,7 +46,6 @@ class ConfigParser {
     }
 
     // Read the configuration file
-    core.info('Read existing configuration')
     this.configuration = fs.readFileSync(this.configurationFile, 'utf8')
   }
 
@@ -162,7 +161,8 @@ class ConfigParser {
   // - propertyValue: the value of the property
   inject(propertyName, propertyValue) {
     // Logging
-    core.info(`Parsing configuration:\n${this.configuration}`)
+    core.info(`Injecting property=${propertyName} and value=${propertyValue} in:`)
+    core.info(this.configuration)
 
     // Parse the AST out of the configuration file
     const espreeOptions = {
@@ -263,7 +263,8 @@ class ConfigParser {
     }
 
     // Logging
-    core.info(`Writing new configuration:\n${this.configuration}`)
+    core.info(`Injection successful, new configuration:`)
+    core.info(this.configuration)
 
     // Finally write the new configuration in the file
     fs.writeFileSync(this.configurationFile, this.configuration, {

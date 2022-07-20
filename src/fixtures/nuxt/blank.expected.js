@@ -1,2 +1,2 @@
 // Default Pages configuration for Nuxt
-export default {router: {base: '/docs/'}}
+export default {server: 'static', router: {base: '/docs/'}}

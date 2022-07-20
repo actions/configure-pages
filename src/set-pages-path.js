@@ -10,7 +10,12 @@ function getConfigParserSettings(staticSiteGenerator, path) {
         configurationFile: './nuxt.config.js',
         blankConfigurationFile: `${__dirname}/blank-configurations/nuxt.js`,
         properties: {
-          'router.base': path
+          // Configure a base path on the router
+          'router.base': path,
+
+          // Set the target to static too
+          // https://nuxtjs.org/docs/configuration-glossary/configuration-target/
+          server: 'static'
         }
       }
     case 'next':
@@ -23,6 +28,7 @@ function getConfigParserSettings(staticSiteGenerator, path) {
         configurationFile: './next.config.js',
         blankConfigurationFile: `${__dirname}/blank-configurations/next.js`,
         properties: {
+          // Configure a base path
           basePath: path,
 
           // Disable server side image optimization too
@@ -35,6 +41,7 @@ function getConfigParserSettings(staticSiteGenerator, path) {
         configurationFile: './gatsby-config.js',
         blankConfigurationFile: `${__dirname}/blank-configurations/gatsby.js`,
         properties: {
+          // Configure a path prefix
           pathPrefix: path
         }
       }
