@@ -130,7 +130,7 @@ const cases = [
     property: 'a.b.c',
     source: `var config = { a: { b: [], c: "hello"}}; module.exports = config`,
     expected: `var config = { a: { b: { c: "value"}, c: "hello"}}; module.exports = config`
-  },
+  }
 ]
 
 describe('config-parser', () => {
@@ -146,10 +146,8 @@ describe('config-parser', () => {
 
       // Update the settings and do the injection
       new ConfigParser({
-        configurationFile: sourceFile,
-        propertyName: property,
-        propertyValue: 'value'
-      }).inject()
+        configurationFile: sourceFile
+      }).inject(property, 'value')
 
       // Compare the files
       compareFiles(sourceFile, expectedFile)

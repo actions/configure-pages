@@ -14433,9 +14433,9 @@ const espree = __nccwpck_require__(6910)
 const core = __nccwpck_require__(2186)
 
 /*
-Parse a JavaScript based configuration file and initialize or update a given property.
+Parse a JavaScript based configuration file and inject arbitrary key/value in it.
 This is used to make sure most static site generators can automatically handle
-Pages's path based routing.
+Pages's path based routing (and work).
 
 Supported configuration initializations:
 
@@ -14460,19 +14460,11 @@ Supported configuration initializations:
 class ConfigParser {
   // Ctor
   // - configurationFile: path to the configuration file
-  // - propertyName: name of the property to update (or set)
-  // - propertyValue: value of the property to update (or set)
   // - blankConfigurationFile: a blank configuration file to use if non was previously found
-  constructor({
-    configurationFile,
-    propertyName,
-    propertyValue,
-    blankConfigurationFile
-  }) {
-    // Save fields
+  constructor({configurationFile, blankConfigurationFile, properties}) {
+    // Save field
     this.configurationFile = configurationFile
-    this.propertyName = propertyName
-    this.propertyValue = propertyValue
+    this.properties = properties
 
     // If the configuration file does not exist, initialize it with the blank configuration file
     if (!fs.existsSync(this.configurationFile)) {
@@ -14573,22 +14565,32 @@ class ConfigParser {
   // Generate a (nested) property declaration.
   // - properties: list of properties to generate
   // - startIndex: the index at which to start in the declaration
+  // - propertyValue: the value of the property
   //
   // Return a nested property declaration as a string.
-  getPropertyDeclaration(properties, startIndex) {
+  getPropertyDeclaration(properties, startIndex, propertyValue) {
     if (startIndex === properties.length - 1) {
-      return `${properties[startIndex]}: "${this.propertyValue}"`
+      return `${properties[startIndex]}: ${JSON.stringify(propertyValue)}`
     } else {
       return (
         `${properties[startIndex]}: {` +
-        this.getPropertyDeclaration(properties, startIndex + 1) +
+        this.getPropertyDeclaration(properties, startIndex + 1, propertyValue) +
         '}'
       )
     }
   }
 
-  // Parse a configuration file and try to inject Pages settings in it.
-  inject() {
+  // Inject all properties into the configuration
+  injectAll() {
+    for (var [propertyName, propertyValue] of Object.entries(this.properties)) {
+      this.inject(propertyName, propertyValue)
+    }
+  }
+
+  // Inject an arbitrary property into the configuration
+  // - propertyName: the name of the property (may use . to target nested objects)
+  // - propertyValue: the value of the property
+  inject(propertyName, propertyValue) {
     // Logging
     core.info(`Parsing configuration:\n${this.configuration}`)
 
@@ -14609,7 +14611,7 @@ class ConfigParser {
     // A property may be nested in the configuration file. Split the property name with `.`
     // then walk the configuration object one property at a time.
     var depth = 0
-    const properties = this.propertyName.split('.')
+    const properties = propertyName.split('.')
     var lastNode = configurationObject
     while (1) {
       // Find the node for the current property
@@ -14633,7 +14635,7 @@ class ConfigParser {
       if (lastNode.type === 'ObjectExpression') {
         this.configuration =
           this.configuration.slice(0, lastNode.range[0]) +
-          `"${this.propertyValue}"` +
+          JSON.stringify(propertyValue) +
           this.configuration.slice(lastNode.range[1])
       }
 
@@ -14642,7 +14644,7 @@ class ConfigParser {
       else {
         this.configuration =
           this.configuration.slice(0, lastNode.range[0]) +
-          `"${this.propertyValue}"` +
+          JSON.stringify(propertyValue) +
           this.configuration.slice(lastNode.range[1])
       }
     }
@@ -14650,7 +14652,11 @@ class ConfigParser {
     // Create nested properties in the configuration file
     else {
       // Build the declaration to inject
-      const declaration = this.getPropertyDeclaration(properties, depth)
+      const declaration = this.getPropertyDeclaration(
+        properties,
+        depth,
+        propertyValue
+      )
 
       // The last node identified is an object expression, so do the assignment
       if (lastNode.type === 'ObjectExpression') {
@@ -14679,7 +14685,9 @@ class ConfigParser {
       else {
         this.configuration =
           this.configuration.slice(0, lastNode.range[0]) +
-          '{' + declaration + '}' +
+          '{' +
+          declaration +
+          '}' +
           this.configuration.slice(lastNode.range[1])
       }
     }
@@ -14826,9 +14834,10 @@ function getConfigParserSettings(staticSiteGenerator, path) {
     case 'nuxt':
       return {
         configurationFile: './nuxt.config.js',
-        propertyName: 'router.base',
-        propertyValue: path,
-        blankConfigurationFile: __nccwpck_require__.ab + "nuxt.js"
+        blankConfigurationFile: __nccwpck_require__.ab + "nuxt.js",
+        properties: {
+          'router.base': path
+        }
       }
     case 'next':
       // Next does not want a trailing slash
@@ -14838,16 +14847,19 @@ function getConfigParserSettings(staticSiteGenerator, path) {
 
       return {
         configurationFile: './next.config.js',
-        propertyName: 'basePath',
-        propertyValue: path,
-        blankConfigurationFile: __nccwpck_require__.ab + "next.js"
+        blankConfigurationFile: __nccwpck_require__.ab + "next.js",
+        properties: {
+          basePath: path,
+          'images.unoptimized': false
+        }
       }
     case 'gatsby':
       return {
         configurationFile: './gatsby-config.js',
-        propertyName: 'pathPrefix',
-        propertyValue: path,
-        blankConfigurationFile: __nccwpck_require__.ab + "gatsby.js"
+        blankConfigurationFile: __nccwpck_require__.ab + "gatsby.js",
+        properties: {
+          pathPrefix: path
+        }
       }
     default:
       throw `Unsupported static site generator: ${staticSiteGenerator}`
@@ -14858,9 +14870,8 @@ function getConfigParserSettings(staticSiteGenerator, path) {
 function setPagesPath({staticSiteGenerator, path}) {
   try {
     // Parse the configuration file and try to inject the Pages configuration in it
-    new ConfigParser(
-      getConfigParserSettings(staticSiteGenerator, path)
-    ).inject()
+    const settings = getConfigParserSettings(staticSiteGenerator, path)
+    new ConfigParser(settings).injectAll()
   } catch (error) {
     // Logging
     core.warning(

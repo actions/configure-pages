@@ -8,9 +8,10 @@ function getConfigParserSettings(staticSiteGenerator, path) {
     case 'nuxt':
       return {
         configurationFile: './nuxt.config.js',
-        propertyName: 'router.base',
-        propertyValue: path,
-        blankConfigurationFile: `${__dirname}/blank-configurations/nuxt.js`
+        blankConfigurationFile: `${__dirname}/blank-configurations/nuxt.js`,
+        properties: {
+          'router.base': path
+        }
       }
     case 'next':
       // Next does not want a trailing slash
@@ -20,16 +21,19 @@ function getConfigParserSettings(staticSiteGenerator, path) {
 
       return {
         configurationFile: './next.config.js',
-        propertyName: 'basePath',
-        propertyValue: path,
-        blankConfigurationFile: `${__dirname}/blank-configurations/next.js`
+        blankConfigurationFile: `${__dirname}/blank-configurations/next.js`,
+        properties: {
+          basePath: path,
+          'images.unoptimized': false
+        }
       }
     case 'gatsby':
       return {
         configurationFile: './gatsby-config.js',
-        propertyName: 'pathPrefix',
-        propertyValue: path,
-        blankConfigurationFile: `${__dirname}/blank-configurations/gatsby.js`
+        blankConfigurationFile: `${__dirname}/blank-configurations/gatsby.js`,
+        properties: {
+          pathPrefix: path
+        }
       }
     default:
       throw `Unsupported static site generator: ${staticSiteGenerator}`
@@ -40,9 +44,8 @@ function getConfigParserSettings(staticSiteGenerator, path) {
 function setPagesPath({staticSiteGenerator, path}) {
   try {
     // Parse the configuration file and try to inject the Pages configuration in it
-    new ConfigParser(
-      getConfigParserSettings(staticSiteGenerator, path)
-    ).inject()
+    const settings = getConfigParserSettings(staticSiteGenerator, path)
+    new ConfigParser(settings).injectAll()
   } catch (error) {
     // Logging
     core.warning(

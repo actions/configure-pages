@@ -37,7 +37,7 @@ describe('configParser', () => {
 
         // Update the settings and do the injection
         settings.configurationFile = fixtureTargetFile
-        new ConfigParser(settings).inject()
+        new ConfigParser(settings).injectAll()
 
         // Read the expected file
         const expectedFile = `${fixtureFolder}/${path.basename(
