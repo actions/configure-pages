@@ -1,3 +1,6 @@
 // Default Pages configuration for Next
-const nextConfig = {images: {unoptimized: true}, basePath: '/docs'}
+const nextConfig = {
+  experimental: {images: {unoptimized: true}},
+  basePath: '/docs'
+}
 module.exports = nextConfig

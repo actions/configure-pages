@@ -24,7 +24,7 @@ function getConfigParserSettings(staticSiteGenerator, path) {
         blankConfigurationFile: `${__dirname}/blank-configurations/next.js`,
         properties: {
           basePath: path,
-          'images.unoptimized': true
+          'experimental.images.unoptimized': true
         }
       }
     case 'gatsby':

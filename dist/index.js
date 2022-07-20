@@ -14850,7 +14850,7 @@ function getConfigParserSettings(staticSiteGenerator, path) {
         blankConfigurationFile: __nccwpck_require__.ab + "next.js",
         properties: {
           basePath: path,
-          'images.unoptimized': true
+          'experimental.images.unoptimized': true
         }
       }
     case 'gatsby':
