@@ -14842,7 +14842,7 @@ function getConfigParserSettings(staticSiteGenerator, path) {
 
           // Set the target to static too
           // https://nuxtjs.org/docs/configuration-glossary/configuration-target/
-          server: 'static'
+          target: 'static'
         }
       }
     case 'next':
