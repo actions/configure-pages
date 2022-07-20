@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  images: {unoptimized: false},
+  images: {unoptimized: true},
   basePath: "/docs",
   reactStrictMode: true,
   swcMinify: true,
