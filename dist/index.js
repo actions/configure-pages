@@ -14596,7 +14596,7 @@ class ConfigParser {
 
     // Parse the AST out of the configuration file
     const espreeOptions = {
-      ecmaVersion: 'latest',
+      ecmaVersion: 6,
       sourceType: 'module',
       range: true
     }
