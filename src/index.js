@@ -4,7 +4,7 @@ const enablePages = require('./enable-pages')
 const getPagesBaseUrl = require('./get-pages-base-url')
 
 // All variables we need from the runtime are loaded here
-const getContext = require('./context')
+const {getContext} = require('./context')
 
 async function main() {
   try {
@@ -16,7 +16,6 @@ async function main() {
     process.exit(1)
   }
 }
-
 
 // Main
 main()

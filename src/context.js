@@ -9,7 +9,8 @@ function getRequiredVars() {
   }
 }
 
-module.exports = function getContext() {
+// Return the context object
+function getContext() {
   const requiredVars = getRequiredVars()
   for (const variable in requiredVars) {
     if (requiredVars[variable] === undefined) {
@@ -19,3 +20,5 @@ module.exports = function getContext() {
   core.debug('all variables are set')
   return requiredVars
 }
+
+module.exports = {getContext}

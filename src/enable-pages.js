@@ -1,19 +1,19 @@
 const core = require('@actions/core')
 const axios = require('axios')
 
-async function enablePages({ repositoryNwo, githubToken }) {
+async function enablePages({repositoryNwo, githubToken}) {
   const pagesEndpoint = `https://api.github.com/repos/${repositoryNwo}/pages`
 
   try {
     const response = await axios.post(
       pagesEndpoint,
-      { build_type: 'workflow' },
+      {build_type: 'workflow'},
       {
         headers: {
           Accept: 'application/vnd.github.v3+json',
           Authorization: `Bearer ${githubToken}`,
-          'Content-type': 'application/json',
-        },
+          'Content-type': 'application/json'
+        }
       }
     )
     core.info('Created pages site')
@@ -23,7 +23,7 @@ async function enablePages({ repositoryNwo, githubToken }) {
       return
     }
 
-    core.error('Couldn\'t create pages site', error)
+    core.error("Couldn't create pages site", error)
     throw error
   }
 }

@@ -1,7 +1,7 @@
 {
   "name": "configure-pages",
   "version": "1.0.0",
-  "description": "",
+  "description": "An action to enable Pages and extract various metadata about a site. It can also be used to configure various static site generators we support as starter workflows.",
   "main": "src/index.js",
   "scripts": {
     "prepare": "ncc build src/index.js -o dist --source-map --license licenses.txt",
@@ -26,6 +26,7 @@
   },
   "devDependencies": {
     "@vercel/ncc": "^0.34.0",
-    "jest": "^28.1.1"
+    "jest": "^28.1.1",
+    "prettier": "^2.7.1"
   }
 }

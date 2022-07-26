@@ -2,6 +2,8 @@
 
 An action to enable Pages and extract various metadata about a site. It can also be used to configure various static site generators we support as [starter workflows][starter-workflows].
 
+See [`set-pages-path.js`](./src/set-pages-path.js) for more details on how we configure static site generators to work "out of the box" with GitHub Pages.
+
 # Usage
 
 See [action.yml](action.yml) and the [Pages starter workflows][starter-workflows].

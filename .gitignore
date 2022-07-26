@@ -1,4 +1,5 @@
 node_modules/
+/src/fixtures/tmp
 
 # Editors
 .vscode/
