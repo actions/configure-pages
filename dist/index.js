@@ -14718,7 +14718,8 @@ function getRequiredVars() {
   return {
     repositoryNwo: process.env.GITHUB_REPOSITORY,
     githubToken: core.getInput('token'),
-    staticSiteGenerator: core.getInput('static_site_generator')
+    staticSiteGenerator: core.getInput('static_site_generator'),
+    enablement: core.getInput('enablement') !== 'false'
   }
 }
 
@@ -16384,7 +16385,9 @@ const {getContext} = __nccwpck_require__(1319)
 async function main() {
   try {
     const context = getContext()
-    await enablePages(context)
+    if (context.enablement) {
+      await enablePages(context)
+    }
     await getPagesBaseUrl(context)
   } catch (error) {
     core.setFailed(error)

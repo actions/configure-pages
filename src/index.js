@@ -9,7 +9,9 @@ const {getContext} = require('./context')
 async function main() {
   try {
     const context = getContext()
-    await enablePages(context)
+    if (context.enablement) {
+      await enablePages(context)
+    }
     await getPagesBaseUrl(context)
   } catch (error) {
     core.setFailed(error)
