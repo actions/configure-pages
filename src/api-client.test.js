@@ -4,8 +4,9 @@ const axios = require('axios')
 const apiClient = require('./api-client')
 
 describe('apiClient', () => {
-  const GITHUB_REPOSITORY = 'paper-spa/is-awesome'
+  const GITHUB_REPOSITORY = 'actions/is-awesome'
   const GITHUB_TOKEN = 'gha-token'
+  const PAGE_OBJECT = { html_url: 'https://actions.github.io/is-awesome/' }
 
   beforeEach(() => {
     jest.restoreAllMocks()
@@ -20,14 +21,13 @@ describe('apiClient', () => {
 
   describe('enablePagesSite', () => {
     it('makes a request to create a page', async () => {
-      const pageObject = { html_url: 'https://paper-spa.github.io/is-awesome/' }
-      jest.spyOn(axios, 'post').mockImplementationOnce(() => Promise.resolve({ status: 201, data: pageObject }))
+      jest.spyOn(axios, 'post').mockImplementationOnce(() => Promise.resolve({ status: 201, data: PAGE_OBJECT }))
 
       const result = await apiClient.enablePagesSite({
         repositoryNwo: GITHUB_REPOSITORY,
         githubToken: GITHUB_TOKEN
       })
-      expect(result).toEqual(pageObject)
+      expect(result).toEqual(PAGE_OBJECT)
     })
 
     it('handles a 409 response when the page already exists', async () => {
@@ -65,14 +65,14 @@ describe('apiClient', () => {
 
   describe('getPagesSite', () => {
     it('makes a request to get a page', async () => {
-      const pageObject = { html_url: 'https://paper-spa.github.io/is-awesome/' }
-      jest.spyOn(axios, 'get').mockImplementationOnce(() => Promise.resolve({ status: 200, data: pageObject }))
+      const PAGE_OBJECT = { html_url: 'https://actions.github.io/is-awesome/' }
+      jest.spyOn(axios, 'get').mockImplementationOnce(() => Promise.resolve({ status: 200, data: PAGE_OBJECT }))
 
       const result = await apiClient.getPagesSite({
         repositoryNwo: GITHUB_REPOSITORY,
         githubToken: GITHUB_TOKEN
       })
-      expect(result).toEqual(pageObject)
+      expect(result).toEqual(PAGE_OBJECT)
     })
 
     it('re-raises errors on failure status codes', async () => {
@@ -96,44 +96,44 @@ describe('apiClient', () => {
 
   describe('findOrCreatePagesSite', () => {
     it('does not make a request to create a page if it already exists', async () => {
-      const pageObject = { html_url: 'https://paper-spa.github.io/is-awesome/' }
-      jest.spyOn(axios, 'get').mockImplementationOnce(() => Promise.resolve({ status: 200, data: pageObject }))
+      const PAGE_OBJECT = { html_url: 'https://actions.github.io/is-awesome/' }
+      jest.spyOn(axios, 'get').mockImplementationOnce(() => Promise.resolve({ status: 200, data: PAGE_OBJECT }))
       jest.spyOn(axios, 'post').mockImplementationOnce(() => Promise.reject({ response: { status: 404 } }))
 
       const result = await apiClient.findOrCreatePagesSite({
         repositoryNwo: GITHUB_REPOSITORY,
         githubToken: GITHUB_TOKEN
       })
-      expect(result).toEqual(pageObject)
+      expect(result).toEqual(PAGE_OBJECT)
       expect(axios.get).toHaveBeenCalledTimes(1)
       expect(axios.post).toHaveBeenCalledTimes(0)
     })
 
     it('makes request to create a page by default if it does not exist', async () => {
-      const pageObject = { html_url: 'https://paper-spa.github.io/is-awesome/' }
+      const PAGE_OBJECT = { html_url: 'https://actions.github.io/is-awesome/' }
       jest.spyOn(axios, 'get').mockImplementationOnce(() => Promise.reject({ response: { status: 404 } }))
-      jest.spyOn(axios, 'post').mockImplementationOnce(() => Promise.resolve({ status: 201, data: pageObject }))
+      jest.spyOn(axios, 'post').mockImplementationOnce(() => Promise.resolve({ status: 201, data: PAGE_OBJECT }))
 
       const result = await apiClient.findOrCreatePagesSite({
         repositoryNwo: GITHUB_REPOSITORY,
         githubToken: GITHUB_TOKEN
       })
-      expect(result).toEqual(pageObject)
+      expect(result).toEqual(PAGE_OBJECT)
       expect(axios.get).toHaveBeenCalledTimes(1)
       expect(axios.post).toHaveBeenCalledTimes(1)
     })
 
     it('makes a request to create a page when explicitly enabled if it does not exist', async () => {
-      const pageObject = { html_url: 'https://paper-spa.github.io/is-awesome/' }
+      const PAGE_OBJECT = { html_url: 'https://actions.github.io/is-awesome/' }
       jest.spyOn(axios, 'get').mockImplementationOnce(() => Promise.reject({ response: { status: 404 } }))
-      jest.spyOn(axios, 'post').mockImplementationOnce(() => Promise.resolve({ status: 201, data: pageObject }))
+      jest.spyOn(axios, 'post').mockImplementationOnce(() => Promise.resolve({ status: 201, data: PAGE_OBJECT }))
 
       const result = await apiClient.findOrCreatePagesSite({
         repositoryNwo: GITHUB_REPOSITORY,
         githubToken: GITHUB_TOKEN,
         enablement: true
       })
-      expect(result).toEqual(pageObject)
+      expect(result).toEqual(PAGE_OBJECT)
       expect(axios.get).toHaveBeenCalledTimes(1)
       expect(axios.post).toHaveBeenCalledTimes(1)
     })
@@ -180,17 +180,17 @@ describe('apiClient', () => {
     })
 
     it('makes second request to get page if create fails because of existence', async () => {
-      const pageObject = { html_url: 'https://paper-spa.github.io/is-awesome/' }
+      const PAGE_OBJECT = { html_url: 'https://actions.github.io/is-awesome/' }
       jest.spyOn(axios, 'get')
         .mockImplementationOnce(() => Promise.reject({ response: { status: 404 } }))
-        .mockImplementationOnce(() => Promise.resolve({ status: 200, data: pageObject }))
+        .mockImplementationOnce(() => Promise.resolve({ status: 200, data: PAGE_OBJECT }))
       jest.spyOn(axios, 'post').mockImplementationOnce(() => Promise.reject({ response: { status: 409 } }))
 
       const result = await apiClient.findOrCreatePagesSite({
         repositoryNwo: GITHUB_REPOSITORY,
         githubToken: GITHUB_TOKEN
       })
-      expect(result).toEqual(pageObject)
+      expect(result).toEqual(PAGE_OBJECT)
       expect(axios.get).toHaveBeenCalledTimes(2)
       expect(axios.post).toHaveBeenCalledTimes(1)
     })
