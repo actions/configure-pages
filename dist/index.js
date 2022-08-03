@@ -14425,6 +14425,100 @@ exports.debug = debug; // for test
 
 /***/ }),
 
+/***/ 9432:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+const axios = __nccwpck_require__(6545)
+const core = __nccwpck_require__(2186)
+
+async function enablePagesSite({ repositoryNwo, githubToken }) {
+  const pagesEndpoint = `https://api.github.com/repos/${repositoryNwo}/pages`
+
+  try {
+    const response = await axios.post(
+      pagesEndpoint,
+      { build_type: 'workflow' },
+      {
+        headers: {
+          Accept: 'application/vnd.github.v3+json',
+          Authorization: `Bearer ${githubToken}`,
+          'Content-type': 'application/json'
+        }
+      }
+    )
+
+    const pageObject = response.data
+    return pageObject
+  } catch (error) {
+    if (error.response && error.response.status === 409) {
+      return null
+    }
+
+    throw error
+  }
+}
+
+async function getPagesSite({ repositoryNwo, githubToken }) {
+  try {
+    const pagesEndpoint = `https://api.github.com/repos/${repositoryNwo}/pages`
+
+    const response = await axios.get(pagesEndpoint, {
+      headers: {
+        Accept: 'application/vnd.github.v3+json',
+        Authorization: `Bearer ${githubToken}`
+      }
+    })
+
+    const pageObject = response.data
+    return pageObject
+  } catch (error) {
+    throw error
+  }
+}
+
+async function findOrCreatePagesSite({ repositoryNwo, githubToken, enablement = true }) {
+  let pageObject
+
+  // Try to find an existing Pages site first
+  try {
+    pageObject = await getPagesSite({ repositoryNwo, githubToken })
+  } catch (error) {
+    if (!enablement) {
+      core.error('Get Pages site failed', error)
+      throw error
+    }
+    core.warning('Get Pages site failed', error)
+  }
+
+  if (!pageObject && enablement) {
+    // Create a new Pages site if one doesn't exist
+    try {
+      pageObject = await enablePagesSite({ repositoryNwo, githubToken })
+    } catch (error) {
+      core.error('Create Pages site failed', error)
+      throw error
+    }
+
+    // This somehow implies that the Pages site was already created but initially failed to be retrieved.
+    // Try one more time for this extreme edge case!
+    if (pageObject == null) {
+      try {
+        pageObject = await getPagesSite({ repositoryNwo, githubToken })
+      } catch (error) {
+        core.error('Get Pages site still failed', error)
+        throw error
+      }
+    }
+  }
+
+  return pageObject
+}
+
+module.exports = { findOrCreatePagesSite, enablePagesSite, getPagesSite }
+
+
+/***/ }),
+
 /***/ 8395:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -14740,85 +14834,19 @@ module.exports = {getContext}
 
 /***/ }),
 
-/***/ 5424:
+/***/ 7527:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 const core = __nccwpck_require__(2186)
-const axios = __nccwpck_require__(6545)
 
-async function enablePages({repositoryNwo, githubToken}) {
-  const pagesEndpoint = `https://api.github.com/repos/${repositoryNwo}/pages`
-
-  try {
-    const response = await axios.post(
-      pagesEndpoint,
-      {build_type: 'workflow'},
-      {
-        headers: {
-          Accept: 'application/vnd.github.v3+json',
-          Authorization: `Bearer ${githubToken}`,
-          'Content-type': 'application/json'
-        }
-      }
-    )
-    core.info('Created pages site')
-  } catch (error) {
-    if (error.response && error.response.status === 409) {
-      core.info('Pages site exists')
-      return
-    }
-
-    core.error("Couldn't create pages site", error)
-    throw error
-  }
+function outputPagesBaseUrl(siteUrl) {
+  core.setOutput('base_url', siteUrl.href)
+  core.setOutput('origin', siteUrl.origin)
+  core.setOutput('host', siteUrl.host)
+  core.setOutput('base_path', siteUrl.pathname)
 }
 
-module.exports = enablePages
-
-
-/***/ }),
-
-/***/ 9965:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-const core = __nccwpck_require__(2186)
-const axios = __nccwpck_require__(6545)
-const {setPagesPath} = __nccwpck_require__(4770)
-
-async function getPagesBaseUrl({
-  repositoryNwo,
-  githubToken,
-  staticSiteGenerator
-}) {
-  try {
-    const pagesEndpoint = `https://api.github.com/repos/${repositoryNwo}/pages`
-
-    core.info(`Get the Base URL to the page with endpoint ${pagesEndpoint}`)
-    const response = await axios.get(pagesEndpoint, {
-      headers: {
-        Accept: 'application/vnd.github.v3+json',
-        Authorization: `Bearer ${githubToken}`
-      }
-    })
-
-    pageObject = response.data
-    core.info(JSON.stringify(pageObject))
-
-    const siteUrl = new URL(pageObject.html_url)
-    if (staticSiteGenerator) {
-      setPagesPath({staticSiteGenerator, path: siteUrl.pathname})
-    }
-    core.setOutput('base_url', siteUrl.href)
-    core.setOutput('origin', siteUrl.origin)
-    core.setOutput('host', siteUrl.host)
-    core.setOutput('base_path', siteUrl.pathname)
-  } catch (error) {
-    core.error('Get on the Page failed', error)
-    throw error
-  }
-}
-
-module.exports = getPagesBaseUrl
+module.exports = outputPagesBaseUrl
 
 
 /***/ }),
@@ -16376,19 +16404,24 @@ var __webpack_exports__ = {};
 (() => {
 const core = __nccwpck_require__(2186)
 
-const enablePages = __nccwpck_require__(5424)
-const getPagesBaseUrl = __nccwpck_require__(9965)
-
 // All variables we need from the runtime are loaded here
-const {getContext} = __nccwpck_require__(1319)
+const { getContext } = __nccwpck_require__(1319)
+
+const { findOrCreatePagesSite } = __nccwpck_require__(9432)
+const { setPagesPath } = __nccwpck_require__(4770)
+const outputPagesBaseUrl = __nccwpck_require__(7527)
 
 async function main() {
   try {
-    const context = getContext()
-    if (context.enablement) {
-      await enablePages(context)
+    const { repositoryNwo, githubToken, enablement, staticSiteGenerator } = getContext()
+
+    const pageObject = await findOrCreatePagesSite({ repositoryNwo, githubToken, enablement })
+    const siteUrl = new URL(pageObject.html_url)
+
+    if (staticSiteGenerator) {
+      setPagesPath({ staticSiteGenerator, path: siteUrl.pathname })
     }
-    await getPagesBaseUrl(context)
+    outputPagesBaseUrl(siteUrl)
   } catch (error) {
     core.setFailed(error)
     process.exit(1)
