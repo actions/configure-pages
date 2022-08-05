@@ -1,22 +1,23 @@
 {
+  "private": true,
   "name": "configure-pages",
   "version": "1.0.0",
-  "description": "An action to enable Pages and extract various metadata about a site. It can also be used to configure various static site generators we support as starter workflows.",
-  "main": "src/index.js",
+  "description": "A GitHub Action to enable Pages and extract various metadata about a site. It can also be used to configure various static site generators we support as starter workflows.",
+  "main": "./dist/index.js",
   "scripts": {
     "prepare": "ncc build src/index.js -o dist --source-map --license licenses.txt",
     "test": "jest"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/paper-spa/configure-pages.git"
+    "url": "git+https://github.com/actions/configure-pages.git"
   },
   "author": "GitHub",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/paper-spa/configure-pages/issues"
+    "url": "https://github.com/actions/configure-pages/issues"
   },
-  "homepage": "https://github.com/paper-spa/configure-pages#readme",
+  "homepage": "https://github.com/actions/configure-pages#readme",
   "dependencies": {
     "@actions/core": "^1.8.2",
     "axios": "^0.27.2",

@@ -5,7 +5,8 @@ function getRequiredVars() {
   return {
     repositoryNwo: process.env.GITHUB_REPOSITORY,
     githubToken: core.getInput('token'),
-    staticSiteGenerator: core.getInput('static_site_generator')
+    staticSiteGenerator: core.getInput('static_site_generator'),
+    enablement: core.getInput('enablement') !== 'false'
   }
 }
 
