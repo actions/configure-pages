@@ -1,8 +1,12 @@
 const axios = require('axios')
 const core = require('@actions/core')
 
+function getApiBaseUrl() {
+  return process.env.GITHUB_API_URL || 'https://api.github.com'
+}
+
 async function enablePagesSite({ repositoryNwo, githubToken }) {
-  const pagesEndpoint = `https://api.github.com/repos/${repositoryNwo}/pages`
+  const pagesEndpoint = `${getApiBaseUrl()}/repos/${repositoryNwo}/pages`
 
   try {
     const response = await axios.post(
@@ -30,7 +34,7 @@ async function enablePagesSite({ repositoryNwo, githubToken }) {
 
 async function getPagesSite({ repositoryNwo, githubToken }) {
   try {
-    const pagesEndpoint = `https://api.github.com/repos/${repositoryNwo}/pages`
+    const pagesEndpoint = `${getApiBaseUrl()}/repos/${repositoryNwo}/pages`
 
     const response = await axios.get(pagesEndpoint, {
       headers: {
@@ -84,4 +88,4 @@ async function findOrCreatePagesSite({ repositoryNwo, githubToken, enablement = 
   return pageObject
 }
 
-module.exports = { findOrCreatePagesSite, enablePagesSite, getPagesSite }
+module.exports = { findOrCreatePagesSite, enablePagesSite, getPagesSite, getApiBaseUrl }

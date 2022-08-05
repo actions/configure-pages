@@ -18,6 +18,27 @@ describe('apiClient', () => {
     jest.spyOn(core, 'debug').mockImplementation(jest.fn())
   })
 
+  describe('getApiBaseUrl', () => {
+    it('returns GITHUB_API_URL environment variable when set', async () => {
+      const expectedBaseUrl = 'https://api.ghe.com'
+      process.env.GITHUB_API_URL = expectedBaseUrl
+      const result = apiClient.getApiBaseUrl()
+      delete process.env.GITHUB_API_URL
+      expect(result).toEqual(expectedBaseUrl)
+    })
+
+    it('defaults to GitHub API if GITHUB_API_URL environment variable is empty', async () => {
+      process.env.GITHUB_API_URL = ''
+      const result = apiClient.getApiBaseUrl()
+      delete process.env.GITHUB_API_URL
+      expect(result).toEqual('https://api.github.com')
+    })
+
+    it('defaults to GitHub API if GITHUB_API_URL environment variable is not set', async () => {
+      const result = apiClient.getApiBaseUrl()
+      expect(result).toEqual('https://api.github.com')
+    })
+  })
 
   describe('enablePagesSite', () => {
     it('makes a request to create a page', async () => {
