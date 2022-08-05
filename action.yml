@@ -11,6 +11,10 @@ inputs:
     description: "GitHub token"
     default: ${{ github.token }}
     required: true
+  enablement:
+    description: "Should a Pages site be enabled for the repository if not so already?"
+    default: "true"
+    required: false
 outputs:
   base_url:
     description: 'GitHub Pages site full base URL. Examples: "https://octocat.github.io/my-repo/", "https://octocat.github.io/", "https://www.example.com/"'

@@ -1,12 +1,8 @@
 const core = require('@actions/core')
-const axios = require('axios')
 
-const getPagesBaseUrl = require('./get-pages-base-url')
+const outputPagesBaseUrl = require('./output-pages-base-url')
 
-describe('getPagesBaseUrl', () => {
-  const GITHUB_REPOSITORY = 'paper-spa/is-awesome'
-  const GITHUB_TOKEN = 'gha-token'
-
+describe('outputPagesBaseUrl', () => {
   beforeEach(() => {
     jest.restoreAllMocks()
 
@@ -25,16 +21,7 @@ describe('getPagesBaseUrl', () => {
   it('gets expected outputs for profile site', async () => {
     const baseUrl = 'https://octocat.github.io/'
 
-    jest
-      .spyOn(axios, 'get')
-      .mockImplementationOnce(() =>
-        Promise.resolve({data: {html_url: baseUrl}})
-      )
-
-    await getPagesBaseUrl({
-      repositoryNwo: GITHUB_REPOSITORY,
-      githubToken: GITHUB_TOKEN
-    })
+    outputPagesBaseUrl(new URL(baseUrl))
 
     expect(core.setOutput).toHaveBeenCalledWith('base_url', baseUrl)
     expect(core.setOutput).toHaveBeenCalledWith(
@@ -48,16 +35,7 @@ describe('getPagesBaseUrl', () => {
   it('gets expected outputs for project site', async () => {
     const baseUrl = 'https://octocat.github.io/my-repo/'
 
-    jest
-      .spyOn(axios, 'get')
-      .mockImplementationOnce(() =>
-        Promise.resolve({data: {html_url: baseUrl}})
-      )
-
-    await getPagesBaseUrl({
-      repositoryNwo: GITHUB_REPOSITORY,
-      githubToken: GITHUB_TOKEN
-    })
+    outputPagesBaseUrl(new URL(baseUrl))
 
     expect(core.setOutput).toHaveBeenCalledWith('base_url', baseUrl)
     expect(core.setOutput).toHaveBeenCalledWith(
@@ -71,16 +49,7 @@ describe('getPagesBaseUrl', () => {
   it('gets expected outputs for site with custom domain name', async () => {
     const baseUrl = 'https://www.example.com/'
 
-    jest
-      .spyOn(axios, 'get')
-      .mockImplementationOnce(() =>
-        Promise.resolve({data: {html_url: baseUrl}})
-      )
-
-    await getPagesBaseUrl({
-      repositoryNwo: GITHUB_REPOSITORY,
-      githubToken: GITHUB_TOKEN
-    })
+    outputPagesBaseUrl(new URL(baseUrl))
 
     expect(core.setOutput).toHaveBeenCalledWith('base_url', baseUrl)
     expect(core.setOutput).toHaveBeenCalledWith(
