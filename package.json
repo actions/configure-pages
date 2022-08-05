@@ -5,7 +5,9 @@
   "description": "A GitHub Action to enable Pages and extract various metadata about a site. It can also be used to configure various static site generators we support as starter workflows.",
   "main": "./dist/index.js",
   "scripts": {
-    "prepare": "ncc build src/index.js -o dist --source-map --license licenses.txt",
+    "format": "prettier --write 'src/**/*.js'",
+    "format:check": "prettier --check 'src/**/*.js'",
+    "prepare": "npm run format && ncc build src/index.js -o dist --source-map --license licenses.txt",
     "test": "jest"
   },
   "repository": {

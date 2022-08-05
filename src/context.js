@@ -22,4 +22,4 @@ function getContext() {
   return requiredVars
 }
 
-module.exports = {getContext}
+module.exports = { getContext }

@@ -24,10 +24,7 @@ describe('outputPagesBaseUrl', () => {
     outputPagesBaseUrl(new URL(baseUrl))
 
     expect(core.setOutput).toHaveBeenCalledWith('base_url', baseUrl)
-    expect(core.setOutput).toHaveBeenCalledWith(
-      'origin',
-      'https://octocat.github.io'
-    )
+    expect(core.setOutput).toHaveBeenCalledWith('origin', 'https://octocat.github.io')
     expect(core.setOutput).toHaveBeenCalledWith('host', 'octocat.github.io')
     expect(core.setOutput).toHaveBeenCalledWith('base_path', '/')
   })
@@ -38,10 +35,7 @@ describe('outputPagesBaseUrl', () => {
     outputPagesBaseUrl(new URL(baseUrl))
 
     expect(core.setOutput).toHaveBeenCalledWith('base_url', baseUrl)
-    expect(core.setOutput).toHaveBeenCalledWith(
-      'origin',
-      'https://octocat.github.io'
-    )
+    expect(core.setOutput).toHaveBeenCalledWith('origin', 'https://octocat.github.io')
     expect(core.setOutput).toHaveBeenCalledWith('host', 'octocat.github.io')
     expect(core.setOutput).toHaveBeenCalledWith('base_path', '/my-repo/')
   })
@@ -52,10 +46,7 @@ describe('outputPagesBaseUrl', () => {
     outputPagesBaseUrl(new URL(baseUrl))
 
     expect(core.setOutput).toHaveBeenCalledWith('base_url', baseUrl)
-    expect(core.setOutput).toHaveBeenCalledWith(
-      'origin',
-      'https://www.example.com'
-    )
+    expect(core.setOutput).toHaveBeenCalledWith('origin', 'https://www.example.com')
     expect(core.setOutput).toHaveBeenCalledWith('host', 'www.example.com')
     expect(core.setOutput).toHaveBeenCalledWith('base_path', '/')
   })
