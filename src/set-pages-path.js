@@ -1,5 +1,5 @@
 const core = require('@actions/core')
-const {ConfigParser} = require('./config-parser')
+const { ConfigParser } = require('./config-parser')
 
 // Return the settings to be passed to a {ConfigParser} for a given
 // static site generator and a Pages path value to inject
@@ -51,7 +51,7 @@ function getConfigParserSettings(staticSiteGenerator, path) {
 }
 
 // Inject Pages configuration in a given static site generator's configuration file
-function setPagesPath({staticSiteGenerator, path}) {
+function setPagesPath({ staticSiteGenerator, path }) {
   try {
     // Parse the configuration file and try to inject the Pages configuration in it
     const settings = getConfigParserSettings(staticSiteGenerator, path)
@@ -65,4 +65,4 @@ function setPagesPath({staticSiteGenerator, path}) {
   }
 }
 
-module.exports = {getConfigParserSettings, setPagesPath}
+module.exports = { getConfigParserSettings, setPagesPath }

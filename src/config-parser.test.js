@@ -1,7 +1,7 @@
 const fs = require('fs')
 
-const {ConfigParser} = require('./config-parser')
-const {getTempFolder, compareFiles} = require('./test-helpers')
+const { ConfigParser } = require('./config-parser')
+const { getTempFolder, compareFiles } = require('./test-helpers')
 
 // Get the temp folder
 const tempFolder = getTempFolder()
@@ -134,15 +134,15 @@ const cases = [
 ]
 
 describe('config-parser', () => {
-  cases.forEach(({property, source, expected}, index) => {
+  cases.forEach(({ property, source, expected }, index) => {
     it(`Inject path properly for case #${index}`, () => {
       // Write the source file
       const sourceFile = `${tempFolder}/source.js`
-      fs.writeFileSync(sourceFile, source, {encoding: 'utf8'})
+      fs.writeFileSync(sourceFile, source, { encoding: 'utf8' })
 
       // Write the expected file
       const expectedFile = `${tempFolder}/expected.js`
-      fs.writeFileSync(expectedFile, expected, {encoding: 'utf8'})
+      fs.writeFileSync(expectedFile, expected, { encoding: 'utf8' })
 
       // Update the settings and do the injection
       new ConfigParser({

@@ -1,9 +1,9 @@
 const fs = require('fs')
 const path = require('path')
 
-const {getConfigParserSettings} = require('./set-pages-path')
-const {ConfigParser} = require('./config-parser')
-const {getTempFolder, compareFiles} = require('./test-helpers')
+const { getConfigParserSettings } = require('./set-pages-path')
+const { ConfigParser } = require('./config-parser')
+const { getTempFolder, compareFiles } = require('./test-helpers')
 
 // Get the temp folder
 const tempFolder = getTempFolder()
@@ -40,10 +40,7 @@ describe('configParser', () => {
         new ConfigParser(settings).injectAll()
 
         // Read the expected file
-        const expectedFile = `${fixtureFolder}/${path.basename(
-          configurationFile,
-          '.js'
-        )}.expected.js`
+        const expectedFile = `${fixtureFolder}/${path.basename(configurationFile, '.js')}.expected.js`
 
         // Compare the actual and expected files
         compareFiles(settings.configurationFile, expectedFile)

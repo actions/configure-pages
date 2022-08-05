@@ -6,7 +6,7 @@ const assert = require('assert')
 function getTempFolder() {
   const tmpFolder = `${__dirname}/fixtures/tmp`
   if (!fs.existsSync(tmpFolder)) {
-    fs.mkdirSync(tmpFolder, {recursive: true})
+    fs.mkdirSync(tmpFolder, { recursive: true })
   }
   return tmpFolder
 }
@@ -14,19 +14,21 @@ function getTempFolder() {
 // Read a JavaScript file and return it formatted
 function formatFile(file) {
   const fileContent = fs.readFileSync(file, 'utf8')
-  return prettier.format(fileContent, {
-    parser: 'espree',
+  return prettier
+    .format(fileContent, {
+      parser: 'espree',
 
-    // Prettier options
-    printWidth: 80,
-    tabWidth: 2,
-    useTabs: false,
-    semi: false,
-    singleQuote: true,
-    trailingComma: 'none',
-    bracketSpacing: false,
-    arrowParens: 'avoid'
-  }).trim()
+      // Prettier options
+      printWidth: 120,
+      tabWidth: 2,
+      useTabs: false,
+      semi: false,
+      singleQuote: true,
+      trailingComma: 'none',
+      bracketSpacing: true,
+      arrowParens: 'avoid'
+    })
+    .trim()
 }
 
 // Compare two JavaScript files
@@ -34,4 +36,4 @@ function compareFiles(actualFile, expectedFile) {
   assert.equal(formatFile(actualFile), formatFile(expectedFile))
 }
 
-module.exports = {getTempFolder, formatFile, compareFiles}
+module.exports = { getTempFolder, formatFile, compareFiles }

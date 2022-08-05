@@ -31,7 +31,7 @@ class ConfigParser {
   // Ctor
   // - configurationFile: path to the configuration file
   // - blankConfigurationFile: a blank configuration file to use if non was previously found
-  constructor({configurationFile, blankConfigurationFile, properties}) {
+  constructor({ configurationFile, blankConfigurationFile, properties }) {
     // Save field
     this.configurationFile = configurationFile
     this.properties = properties
@@ -57,9 +57,7 @@ class ConfigParser {
   findConfigurationObject(ast) {
     // Try to find a default export
     var defaultExport = ast.body.find(
-      node =>
-        node.type === 'ExportDefaultDeclaration' &&
-        node.declaration.type === 'ObjectExpression'
+      node => node.type === 'ExportDefaultDeclaration' && node.declaration.type === 'ObjectExpression'
     )
     if (defaultExport) {
       core.info('Found configuration object in default export declaration')
@@ -80,19 +78,13 @@ class ConfigParser {
     )
 
     // Direct module export
-    if (
-      moduleExport &&
-      moduleExport.expression.right.type === 'ObjectExpression'
-    ) {
+    if (moduleExport && moduleExport.expression.right.type === 'ObjectExpression') {
       core.info('Found configuration object in direct module export')
       return moduleExport.expression.right
     }
 
     // Indirect module export
-    else if (
-      moduleExport &&
-      moduleExport.expression.right.type === 'Identifier'
-    ) {
+    else if (moduleExport && moduleExport.expression.right.type === 'Identifier') {
       const identifierName = moduleExport && moduleExport.expression.right.name
       const identifierDefinition = ast.body.find(
         node =>
@@ -120,9 +112,7 @@ class ConfigParser {
     // Try to find a property matching a given name
     const property =
       object.type === 'ObjectExpression' &&
-      object.properties.find(
-        node => node.key.type === 'Identifier' && node.key.name === name
-      )
+      object.properties.find(node => node.key.type === 'Identifier' && node.key.name === name)
 
     // Return the property's value (if found) or null
     if (property) {
@@ -142,9 +132,7 @@ class ConfigParser {
       return `${properties[startIndex]}: ${JSON.stringify(propertyValue)}`
     } else {
       return (
-        `${properties[startIndex]}: {` +
-        this.getPropertyDeclaration(properties, startIndex + 1, propertyValue) +
-        '}'
+        `${properties[startIndex]}: {` + this.getPropertyDeclaration(properties, startIndex + 1, propertyValue) + '}'
       )
     }
   }
@@ -222,11 +210,7 @@ class ConfigParser {
     // Create nested properties in the configuration file
     else {
       // Build the declaration to inject
-      const declaration = this.getPropertyDeclaration(
-        properties,
-        depth,
-        propertyValue
-      )
+      const declaration = this.getPropertyDeclaration(properties, depth, propertyValue)
 
       // The last node identified is an object expression, so do the assignment
       if (lastNode.type === 'ObjectExpression') {
@@ -273,4 +257,4 @@ class ConfigParser {
   }
 }
 
-module.exports = {ConfigParser}
+module.exports = { ConfigParser }
