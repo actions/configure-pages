@@ -1,5 +1,6 @@
 name: "Configure Pages"
 description: "A GitHub Action to enable Pages, extract various metadata about a site, and configure some supported static site generators."
+author: "GitHub"
 runs:
   using: "node16"
   main: "dist/index.js"
