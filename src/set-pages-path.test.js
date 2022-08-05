@@ -9,6 +9,9 @@ const { getTempFolder, compareFiles } = require('./test-helpers')
 // Get the temp folder
 const tempFolder = getTempFolder()
 
+const SUPPORTED_GENERATORS = ['next', 'nuxt', 'gatsby']
+const SUPPORTED_FILE_EXTENSIONS = ['.js', '.cjs', '.mjs']
+
 // Test suite
 describe('configParser', () => {
   beforeEach(() => {
@@ -22,7 +25,7 @@ describe('configParser', () => {
   })
 
   // Iterate over the static site generators
-  ;['next', 'nuxt', 'gatsby'].forEach(staticSiteGenerator => {
+  SUPPORTED_GENERATORS.forEach(staticSiteGenerator => {
     // Folder containing the fixtures for a given static site generator
     const fixtureFolder = `${__dirname}/fixtures/${staticSiteGenerator}`
 
@@ -61,7 +64,8 @@ describe('configParser', () => {
           compareFiles(settings.configurationFile, expectedFile)
         })
       })
-    ;['.js', '.cjs', '.mjs'].forEach(fileExtension => {
+
+    SUPPORTED_FILE_EXTENSIONS.forEach(fileExtension => {
       // Iterate over the fixtures, outputting to specified configuration file path
       configurationFiles
         .filter(filename => filename.endsWith(fileExtension))
