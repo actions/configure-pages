@@ -35,6 +35,7 @@ describe('apiClient', () => {
     })
 
     it('defaults to GitHub API if GITHUB_API_URL environment variable is not set', async () => {
+      delete process.env.GITHUB_API_URL
       const result = apiClient.getApiBaseUrl()
       expect(result).toEqual('https://api.github.com')
     })
