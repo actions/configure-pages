@@ -1,19 +1,20 @@
-name: "Configure Pages"
-description: "An action to enable Pages and extract various metadata about a site. It can also be used to configure various static site generators we support as starter workflows."
+name: 'Configure Pages'
+description: 'A GitHub Action to enable Pages, extract various metadata about a site, and configure some supported static site generators.'
+author: 'GitHub'
 runs:
-  using: "node16"
-  main: "dist/index.js"
+  using: 'node16'
+  main: 'dist/index.js'
 inputs:
   static_site_generator:
-    description: "Optional static site generator to attempt to configure (nuxt, next or gatsby)"
+    description: 'Optional static site generator to attempt to configure (nuxt, next or gatsby)'
     required: false
   token:
-    description: "GitHub token"
+    description: 'GitHub token'
     default: ${{ github.token }}
     required: true
   enablement:
-    description: "Should a Pages site be enabled for the repository if not so already?"
-    default: "true"
+    description: 'Should a Pages site be enabled for the repository if not so already?'
+    default: 'true'
     required: false
 outputs:
   base_url:
