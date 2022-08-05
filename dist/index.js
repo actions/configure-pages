@@ -14584,12 +14584,30 @@ class ConfigParser {
   // Return the configuration object or null.
   findConfigurationObject(ast) {
     // Try to find a default export
-    var defaultExport = ast.body.find(
-      node => node.type === 'ExportDefaultDeclaration' && node.declaration.type === 'ObjectExpression'
-    )
-    if (defaultExport) {
-      core.info('Found configuration object in default export declaration')
+    var defaultExport = ast.body.find(node => node.type === 'ExportDefaultDeclaration')
+
+    // Direct default export
+    if (defaultExport && defaultExport.declaration.type === 'ObjectExpression') {
+      core.info('Found configuration object in direct default export declaration')
       return defaultExport.declaration
+    }
+
+    // Indirect default export
+    else if (defaultExport && defaultExport.declaration.type === 'Identifier') {
+      const identifierName = defaultExport && defaultExport.declaration.name
+      const identifierDefinition = ast.body.find(
+        node =>
+          node.type === 'VariableDeclaration' &&
+          node.declarations.length == 1 &&
+          node.declarations[0].type === 'VariableDeclarator' &&
+          node.declarations[0].id.type === 'Identifier' &&
+          node.declarations[0].id.name === identifierName &&
+          node.declarations[0].init.type === 'ObjectExpression'
+      )
+      if (identifierDefinition) {
+        core.info('Found configuration object in indirect default export declaration')
+        return identifierDefinition.declarations[0].init
+      }
     }
 
     // Try to find a module export
@@ -14699,7 +14717,7 @@ class ConfigParser {
     var depth = 0
     const properties = propertyName.split('.')
     var lastNode = configurationObject
-    while (1) {
+    while (true) {
       // Find the node for the current property
       var propertyNode = this.findProperty(lastNode, properties[depth])
 
@@ -14801,6 +14819,7 @@ function getRequiredVars() {
     repositoryNwo: process.env.GITHUB_REPOSITORY,
     githubToken: core.getInput('token'),
     staticSiteGenerator: core.getInput('static_site_generator'),
+    generatorConfigFile: core.getInput('generator_config_file'),
     enablement: core.getInput('enablement') !== 'false'
   }
 }
@@ -14845,13 +14864,13 @@ module.exports = outputPagesBaseUrl
 const core = __nccwpck_require__(2186)
 const { ConfigParser } = __nccwpck_require__(8395)
 
-// Return the settings to be passed to a {ConfigParser} for a given
-// static site generator and a Pages path value to inject
-function getConfigParserSettings(staticSiteGenerator, path) {
+// Return the settings to be passed to a {ConfigParser} for a given static site generator,
+// optional configuration file path, and a Pages path value to inject
+function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, path }) {
   switch (staticSiteGenerator) {
     case 'nuxt':
       return {
-        configurationFile: './nuxt.config.js',
+        configurationFile: generatorConfigFile || './nuxt.config.js',
         blankConfigurationFile: __nccwpck_require__.ab + "nuxt.js",
         properties: {
           // Configure a base path on the router
@@ -14869,7 +14888,7 @@ function getConfigParserSettings(staticSiteGenerator, path) {
       }
 
       return {
-        configurationFile: './next.config.js',
+        configurationFile: generatorConfigFile || './next.config.js',
         blankConfigurationFile: __nccwpck_require__.ab + "next.js",
         properties: {
           // Configure a base path
@@ -14882,7 +14901,7 @@ function getConfigParserSettings(staticSiteGenerator, path) {
       }
     case 'gatsby':
       return {
-        configurationFile: './gatsby-config.js',
+        configurationFile: generatorConfigFile || './gatsby-config.js',
         blankConfigurationFile: __nccwpck_require__.ab + "gatsby.js",
         properties: {
           // Configure a path prefix
@@ -14895,10 +14914,10 @@ function getConfigParserSettings(staticSiteGenerator, path) {
 }
 
 // Inject Pages configuration in a given static site generator's configuration file
-function setPagesPath({ staticSiteGenerator, path }) {
+function setPagesPath({ staticSiteGenerator, generatorConfigFile, path }) {
   try {
     // Parse the configuration file and try to inject the Pages configuration in it
-    const settings = getConfigParserSettings(staticSiteGenerator, path)
+    const settings = getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, path })
     new ConfigParser(settings).injectAll()
   } catch (error) {
     // Logging
@@ -16401,13 +16420,13 @@ const outputPagesBaseUrl = __nccwpck_require__(7527)
 
 async function main() {
   try {
-    const { repositoryNwo, githubToken, enablement, staticSiteGenerator } = getContext()
+    const { repositoryNwo, githubToken, enablement, staticSiteGenerato, generatorConfigFile } = getContext()
 
     const pageObject = await findOrCreatePagesSite({ repositoryNwo, githubToken, enablement })
     const siteUrl = new URL(pageObject.html_url)
 
     if (staticSiteGenerator) {
-      setPagesPath({ staticSiteGenerator, path: siteUrl.pathname })
+      setPagesPath({ staticSiteGenerator, generatorConfigFile, path: siteUrl.pathname })
     }
     outputPagesBaseUrl(siteUrl)
   } catch (error) {
