@@ -9,13 +9,13 @@ const outputPagesBaseUrl = require('./output-pages-base-url')
 
 async function main() {
   try {
-    const { repositoryNwo, githubToken, enablement, staticSiteGenerator } = getContext()
+    const { repositoryNwo, githubToken, enablement, staticSiteGenerato, generatorConfigFile } = getContext()
 
     const pageObject = await findOrCreatePagesSite({ repositoryNwo, githubToken, enablement })
     const siteUrl = new URL(pageObject.html_url)
 
     if (staticSiteGenerator) {
-      setPagesPath({ staticSiteGenerator, path: siteUrl.pathname })
+      setPagesPath({ staticSiteGenerator, generatorConfigFile, path: siteUrl.pathname })
     }
     outputPagesBaseUrl(siteUrl)
   } catch (error) {

@@ -171,7 +171,7 @@ class ConfigParser {
     var depth = 0
     const properties = propertyName.split('.')
     var lastNode = configurationObject
-    while (1) {
+    while (true) {
       // Find the node for the current property
       var propertyNode = this.findProperty(lastNode, properties[depth])
 

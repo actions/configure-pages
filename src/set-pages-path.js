@@ -1,13 +1,13 @@
 const core = require('@actions/core')
 const { ConfigParser } = require('./config-parser')
 
-// Return the settings to be passed to a {ConfigParser} for a given
-// static site generator and a Pages path value to inject
-function getConfigParserSettings(staticSiteGenerator, path) {
+// Return the settings to be passed to a {ConfigParser} for a given static site generator,
+// optional configuration file path, and a Pages path value to inject
+function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, path }) {
   switch (staticSiteGenerator) {
     case 'nuxt':
       return {
-        configurationFile: './nuxt.config.js',
+        configurationFile: generatorConfigFile || './nuxt.config.js',
         blankConfigurationFile: `${__dirname}/blank-configurations/nuxt.js`,
         properties: {
           // Configure a base path on the router
@@ -25,7 +25,7 @@ function getConfigParserSettings(staticSiteGenerator, path) {
       }
 
       return {
-        configurationFile: './next.config.js',
+        configurationFile: generatorConfigFile || './next.config.js',
         blankConfigurationFile: `${__dirname}/blank-configurations/next.js`,
         properties: {
           // Configure a base path
@@ -38,7 +38,7 @@ function getConfigParserSettings(staticSiteGenerator, path) {
       }
     case 'gatsby':
       return {
-        configurationFile: './gatsby-config.js',
+        configurationFile: generatorConfigFile || './gatsby-config.js',
         blankConfigurationFile: `${__dirname}/blank-configurations/gatsby.js`,
         properties: {
           // Configure a path prefix
@@ -51,10 +51,10 @@ function getConfigParserSettings(staticSiteGenerator, path) {
 }
 
 // Inject Pages configuration in a given static site generator's configuration file
-function setPagesPath({ staticSiteGenerator, path }) {
+function setPagesPath({ staticSiteGenerator, generatorConfigFile, path }) {
   try {
     // Parse the configuration file and try to inject the Pages configuration in it
-    const settings = getConfigParserSettings(staticSiteGenerator, path)
+    const settings = getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, path })
     new ConfigParser(settings).injectAll()
   } catch (error) {
     // Logging
