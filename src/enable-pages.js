@@ -2,7 +2,7 @@ const core = require('@actions/core')
 const axios = require('axios')
 
 async function enablePages({repositoryNwo, githubToken}) {
-  const pagesEndpoint = `https://api.github.com/repos/${repositoryNwo}/pages`
+  const pagesEndpoint = `${process.env.GITHUB_API_URL ?? 'https://api.github.com'}/repos/${repositoryNwo}/pages`
 
   try {
     const response = await axios.post(

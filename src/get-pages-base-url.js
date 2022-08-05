@@ -8,7 +8,7 @@ async function getPagesBaseUrl({
   staticSiteGenerator
 }) {
   try {
-    const pagesEndpoint = `https://api.github.com/repos/${repositoryNwo}/pages`
+    const pagesEndpoint = `${process.env.GITHUB_API_URL ?? 'https://api.github.com'}/repos/${repositoryNwo}/pages`
 
     core.info(`Get the Base URL to the page with endpoint ${pagesEndpoint}`)
     const response = await axios.get(pagesEndpoint, {
