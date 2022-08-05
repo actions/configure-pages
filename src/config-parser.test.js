@@ -12,7 +12,6 @@ const cases = [
   //
   // Default export
   //
-
   {
     property: 'property',
     source: `export default {}`,
@@ -88,6 +87,30 @@ const cases = [
     property: 'a1.a2',
     source: `export default { a2: false, a1: { a3: [12]}}`, // property exists and is a non-empty object
     expected: `export default { a2: false, a1: { a2: "value", a3: [12]}}`
+  },
+
+  //
+  // Indirect default export
+  //
+  {
+    property: 'property',
+    source: `const config = {}; export default config`,
+    expected: `const config = { property: "value"}; export default config`
+  },
+  {
+    property: 'property',
+    source: `var config = {}; export default config`,
+    expected: `var config = { property: "value"}; export default config`
+  },
+  {
+    property: 'a.b.c',
+    source: `var config = {}; export default config`,
+    expected: `var config = { a: { b: { c: "value"}}}; export default config`
+  },
+  {
+    property: 'a.b.c',
+    source: `var config = { a: { b: [], c: "hello"}}; export default config`,
+    expected: `var config = { a: { b: { c: "value"}, c: "hello"}}; export default config`
   },
 
   //
