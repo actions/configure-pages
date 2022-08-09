@@ -66,7 +66,7 @@ class ConfigParser {
 
     // Indirect default export
     else if (defaultExport && defaultExport.declaration.type === 'Identifier') {
-      const identifierName = defaultExport && defaultExport.declaration.name
+      const identifierName = defaultExport.declaration.name
       const identifierDefinition = ast.body.find(
         node =>
           node.type === 'VariableDeclaration' &&
