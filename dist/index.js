@@ -14578,8 +14578,8 @@ class ConfigParser {
   }
 
   // Find the configuration object in an AST.
-  // Look for a default export, an export default with idenfitier, a direct module export
-  // or an indirect module export (in that order).
+  // Look for a default export, a direct module export or an indirect module
+  // export (in that order).
   //
   // Return the configuration object or null.
   findConfigurationObject(ast) {
@@ -14915,7 +14915,7 @@ function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, pat
       }
 
       return {
-        configurationFile: './svelte.config.js',
+        configurationFile: generatorConfigFile || './svelte.config.js',
         blankConfigurationFile: __nccwpck_require__.ab + "sveltekit.js",
         properties: {
           // Configure a base path
@@ -16443,6 +16443,7 @@ async function main() {
       setPagesPath({ staticSiteGenerator, generatorConfigFile, path: siteUrl.pathname })
     }
     outputPagesBaseUrl(siteUrl)
+    core.exportVariable('GITHUB_PAGES', true)
   } catch (error) {
     core.setFailed(error)
     process.exit(1)
