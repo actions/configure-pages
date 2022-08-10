@@ -52,7 +52,7 @@ function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, pat
       }
 
       return {
-        configurationFile: './svelte.config.js',
+        configurationFile: generatorConfigFile || './svelte.config.js',
         blankConfigurationFile: `${__dirname}/blank-configurations/sveltekit.js`,
         properties: {
           // Configure a base path

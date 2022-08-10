@@ -50,8 +50,8 @@ class ConfigParser {
   }
 
   // Find the configuration object in an AST.
-  // Look for a default export, an export default with idenfitier, a direct module export
-  // or an indirect module export (in that order).
+  // Look for a default export, a direct module export or an indirect module
+  // export (in that order).
   //
   // Return the configuration object or null.
   findConfigurationObject(ast) {
