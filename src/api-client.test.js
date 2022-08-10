@@ -53,9 +53,7 @@ describe('apiClient', () => {
     })
 
     it('handles a 409 response when the page already exists', async () => {
-      jest
-        .spyOn(axios, 'post')
-        .mockImplementationOnce(() => Promise.reject({ response: { status: 409 } }))
+      jest.spyOn(axios, 'post').mockImplementationOnce(() => Promise.reject({ response: { status: 409 } }))
 
       // Simply assert that no error is raised
       const result = await apiClient.enablePagesSite({
@@ -67,9 +65,7 @@ describe('apiClient', () => {
     })
 
     it('re-raises errors on failure status codes', async () => {
-      jest
-        .spyOn(axios, 'post')
-        .mockImplementationOnce(() => Promise.reject({ response: { status: 404 } }))
+      jest.spyOn(axios, 'post').mockImplementationOnce(() => Promise.reject({ response: { status: 404 } }))
 
       let erred = false
       try {
@@ -98,9 +94,7 @@ describe('apiClient', () => {
     })
 
     it('re-raises errors on failure status codes', async () => {
-      jest
-        .spyOn(axios, 'get')
-        .mockImplementationOnce(() => Promise.reject({ response: { status: 404 } }))
+      jest.spyOn(axios, 'get').mockImplementationOnce(() => Promise.reject({ response: { status: 404 } }))
 
       let erred = false
       try {
@@ -203,7 +197,8 @@ describe('apiClient', () => {
 
     it('makes second request to get page if create fails because of existence', async () => {
       const PAGE_OBJECT = { html_url: 'https://actions.github.io/is-awesome/' }
-      jest.spyOn(axios, 'get')
+      jest
+        .spyOn(axios, 'get')
         .mockImplementationOnce(() => Promise.reject({ response: { status: 404 } }))
         .mockImplementationOnce(() => Promise.resolve({ status: 200, data: PAGE_OBJECT }))
       jest.spyOn(axios, 'post').mockImplementationOnce(() => Promise.reject({ response: { status: 409 } }))
@@ -217,5 +212,4 @@ describe('apiClient', () => {
       expect(axios.post).toHaveBeenCalledTimes(1)
     })
   })
-
 })

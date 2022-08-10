@@ -6,6 +6,7 @@ function getRequiredVars() {
     repositoryNwo: process.env.GITHUB_REPOSITORY,
     githubToken: core.getInput('token'),
     staticSiteGenerator: core.getInput('static_site_generator'),
+    generatorConfigFile: core.getInput('generator_config_file'),
     enablement: core.getInput('enablement') !== 'false'
   }
 }
@@ -22,4 +23,4 @@ function getContext() {
   return requiredVars
 }
 
-module.exports = {getContext}
+module.exports = { getContext }
