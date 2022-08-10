@@ -14578,8 +14578,8 @@ class ConfigParser {
   }
 
   // Find the configuration object in an AST.
-  // Look for a default export, a direct module export or an indirect module
-  // export (in that order).
+  // Look for a default export, an export default with idenfitier, a direct module export
+  // or an indirect module export (in that order).
   //
   // Return the configuration object or null.
   findConfigurationObject(ast) {
@@ -14906,6 +14906,20 @@ function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, pat
         properties: {
           // Configure a path prefix
           pathPrefix: path
+        }
+      }
+    case 'sveltekit':
+      // SvelteKit does not want a trailing slash
+      if (path.endsWith('/')) {
+        path = path.slice(0, -1)
+      }
+
+      return {
+        configurationFile: './svelte.config.js',
+        blankConfigurationFile: __nccwpck_require__.ab + "sveltekit.js",
+        properties: {
+          // Configure a base path
+          'kit.paths.base': path
         }
       }
     default:
