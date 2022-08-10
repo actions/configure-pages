@@ -56,12 +56,30 @@ class ConfigParser {
   // Return the configuration object or null.
   findConfigurationObject(ast) {
     // Try to find a default export
-    var defaultExport = ast.body.find(
-      node => node.type === 'ExportDefaultDeclaration' && node.declaration.type === 'ObjectExpression'
-    )
-    if (defaultExport) {
-      core.info('Found configuration object in default export declaration')
+    var defaultExport = ast.body.find(node => node.type === 'ExportDefaultDeclaration')
+
+    // Direct default export
+    if (defaultExport && defaultExport.declaration.type === 'ObjectExpression') {
+      core.info('Found configuration object in direct default export declaration')
       return defaultExport.declaration
+    }
+
+    // Indirect default export
+    else if (defaultExport && defaultExport.declaration.type === 'Identifier') {
+      const identifierName = defaultExport.declaration.name
+      const identifierDefinition = ast.body.find(
+        node =>
+          node.type === 'VariableDeclaration' &&
+          node.declarations.length == 1 &&
+          node.declarations[0].type === 'VariableDeclarator' &&
+          node.declarations[0].id.type === 'Identifier' &&
+          node.declarations[0].id.name === identifierName &&
+          node.declarations[0].init.type === 'ObjectExpression'
+      )
+      if (identifierDefinition) {
+        core.info('Found configuration object in indirect default export declaration')
+        return identifierDefinition.declarations[0].init
+      }
     }
 
     // Try to find a module export
@@ -171,7 +189,7 @@ class ConfigParser {
     var depth = 0
     const properties = propertyName.split('.')
     var lastNode = configurationObject
-    while (1) {
+    while (true) {
       // Find the node for the current property
       var propertyNode = this.findProperty(lastNode, properties[depth])
 

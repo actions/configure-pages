@@ -1,4 +1,5 @@
 const fs = require('fs')
+const core = require('@actions/core')
 
 const { ConfigParser } = require('./config-parser')
 const { getTempFolder, compareFiles } = require('./test-helpers')
@@ -11,7 +12,6 @@ const cases = [
   //
   // Default export
   //
-
   {
     property: 'property',
     source: `export default {}`,
@@ -90,6 +90,30 @@ const cases = [
   },
 
   //
+  // Indirect default export
+  //
+  {
+    property: 'property',
+    source: `const config = {}; export default config`,
+    expected: `const config = { property: "value"}; export default config`
+  },
+  {
+    property: 'property',
+    source: `var config = {}; export default config`,
+    expected: `var config = { property: "value"}; export default config`
+  },
+  {
+    property: 'a.b.c',
+    source: `var config = {}; export default config`,
+    expected: `var config = { a: { b: { c: "value"}}}; export default config`
+  },
+  {
+    property: 'a.b.c',
+    source: `var config = { a: { b: [], c: "hello"}}; export default config`,
+    expected: `var config = { a: { b: { c: "value"}, c: "hello"}}; export default config`
+  },
+
+  //
   // Direct module exports
   //
   {
@@ -134,8 +158,18 @@ const cases = [
 ]
 
 describe('config-parser', () => {
+  beforeEach(() => {
+    jest.restoreAllMocks()
+
+    // Mock error/warning/info/debug to silence their output
+    jest.spyOn(core, 'error').mockImplementation(jest.fn())
+    jest.spyOn(core, 'warning').mockImplementation(jest.fn())
+    jest.spyOn(core, 'info').mockImplementation(jest.fn())
+    jest.spyOn(core, 'debug').mockImplementation(jest.fn())
+  })
+
   cases.forEach(({ property, source, expected }, index) => {
-    it(`Inject path properly for case #${index}`, () => {
+    it(`injects path properly for case #${index}`, () => {
       // Write the source file
       const sourceFile = `${tempFolder}/source.js`
       fs.writeFileSync(sourceFile, source, { encoding: 'utf8' })

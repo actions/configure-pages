@@ -6,7 +6,10 @@ runs:
   main: 'dist/index.js'
 inputs:
   static_site_generator:
-    description: 'Optional static site generator to attempt to configure (nuxt, next or gatsby)'
+    description: 'Optional static site generator to attempt to configure: "nuxt", "next", or "gatsby"'
+    required: false
+  generator_config_file:
+    description: 'Optional file path to static site generator configuration file'
     required: false
   token:
     description: 'GitHub token'
