@@ -9,7 +9,7 @@ const outputPagesBaseUrl = require('./output-pages-base-url')
 
 async function main() {
   try {
-    const { repositoryNwo, githubToken, enablement, staticSiteGenerato, generatorConfigFile } = getContext()
+    const { repositoryNwo, githubToken, enablement, staticSiteGenerator, generatorConfigFile } = getContext()
 
     const pageObject = await findOrCreatePagesSite({ repositoryNwo, githubToken, enablement })
     const siteUrl = new URL(pageObject.html_url)
