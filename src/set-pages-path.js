@@ -45,6 +45,20 @@ function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, pat
           pathPrefix: path
         }
       }
+    case 'sveltekit':
+      // SvelteKit does not want a trailing slash
+      if (path.endsWith('/')) {
+        path = path.slice(0, -1)
+      }
+
+      return {
+        configurationFile: generatorConfigFile || './svelte.config.js',
+        blankConfigurationFile: `${__dirname}/blank-configurations/sveltekit.js`,
+        properties: {
+          // Configure a base path
+          'kit.paths.base': path
+        }
+      }
     default:
       throw `Unsupported static site generator: ${staticSiteGenerator}`
   }

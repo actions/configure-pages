@@ -14908,6 +14908,20 @@ function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, pat
           pathPrefix: path
         }
       }
+    case 'sveltekit':
+      // SvelteKit does not want a trailing slash
+      if (path.endsWith('/')) {
+        path = path.slice(0, -1)
+      }
+
+      return {
+        configurationFile: generatorConfigFile || './svelte.config.js',
+        blankConfigurationFile: __nccwpck_require__.ab + "sveltekit.js",
+        properties: {
+          // Configure a base path
+          'kit.paths.base': path
+        }
+      }
     default:
       throw `Unsupported static site generator: ${staticSiteGenerator}`
   }
@@ -16429,6 +16443,7 @@ async function main() {
       setPagesPath({ staticSiteGenerator, generatorConfigFile, path: siteUrl.pathname })
     }
     outputPagesBaseUrl(siteUrl)
+    core.exportVariable('GITHUB_PAGES', 'true')
   } catch (error) {
     core.setFailed(error)
     process.exit(1)

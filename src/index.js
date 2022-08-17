@@ -18,6 +18,7 @@ async function main() {
       setPagesPath({ staticSiteGenerator, generatorConfigFile, path: siteUrl.pathname })
     }
     outputPagesBaseUrl(siteUrl)
+    core.exportVariable('GITHUB_PAGES', 'true')
   } catch (error) {
     core.setFailed(error)
     process.exit(1)
