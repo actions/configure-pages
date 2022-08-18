@@ -21,7 +21,7 @@
   },
   "homepage": "https://github.com/actions/configure-pages#readme",
   "dependencies": {
-    "@actions/core": "^1.8.2",
+    "@actions/core": "^1.9.1",
     "axios": "^0.27.2",
     "axios-retry": "^3.2.5",
     "espree": "^9.3.2",
