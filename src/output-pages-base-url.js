@@ -1,11 +1,5 @@
 const core = require('@actions/core')
-
-function removeTrailingSlash(str) {
-  if (str.endsWith('/')) {
-    str = str.slice(0, -1)
-  }
-  return str
-}
+const removeTrailingSlash = require('./remove-trailing-slash')
 
 function outputPagesBaseUrl(siteUrl) {
   // Many static site generators do not want the trailing slash, and it is much easier to add than remove in a workflow
