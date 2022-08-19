@@ -1,5 +1,6 @@
 const core = require('@actions/core')
 const { ConfigParser } = require('./config-parser')
+const removeTrailingSlash = require('./remove-trailing-slash')
 
 // Return the settings to be passed to a {ConfigParser} for a given static site generator,
 // optional configuration file path, and a Pages path value to inject
@@ -20,9 +21,7 @@ function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, pat
       }
     case 'next':
       // Next does not want a trailing slash
-      if (path.endsWith('/')) {
-        path = path.slice(0, -1)
-      }
+      path = removeTrailingSlash(path)
 
       return {
         configurationFile: generatorConfigFile || './next.config.js',
@@ -47,9 +46,7 @@ function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, pat
       }
     case 'sveltekit':
       // SvelteKit does not want a trailing slash
-      if (path.endsWith('/')) {
-        path = path.slice(0, -1)
-      }
+      path = removeTrailingSlash(path)
 
       return {
         configurationFile: generatorConfigFile || './svelte.config.js',

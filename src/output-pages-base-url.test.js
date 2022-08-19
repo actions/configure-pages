@@ -23,10 +23,10 @@ describe('outputPagesBaseUrl', () => {
 
     outputPagesBaseUrl(new URL(baseUrl))
 
-    expect(core.setOutput).toHaveBeenCalledWith('base_url', baseUrl)
+    expect(core.setOutput).toHaveBeenCalledWith('base_url', 'https://octocat.github.io')
     expect(core.setOutput).toHaveBeenCalledWith('origin', 'https://octocat.github.io')
     expect(core.setOutput).toHaveBeenCalledWith('host', 'octocat.github.io')
-    expect(core.setOutput).toHaveBeenCalledWith('base_path', '/')
+    expect(core.setOutput).toHaveBeenCalledWith('base_path', '')
   })
 
   it('gets expected outputs for project site', async () => {
@@ -34,10 +34,10 @@ describe('outputPagesBaseUrl', () => {
 
     outputPagesBaseUrl(new URL(baseUrl))
 
-    expect(core.setOutput).toHaveBeenCalledWith('base_url', baseUrl)
+    expect(core.setOutput).toHaveBeenCalledWith('base_url', 'https://octocat.github.io/my-repo')
     expect(core.setOutput).toHaveBeenCalledWith('origin', 'https://octocat.github.io')
     expect(core.setOutput).toHaveBeenCalledWith('host', 'octocat.github.io')
-    expect(core.setOutput).toHaveBeenCalledWith('base_path', '/my-repo/')
+    expect(core.setOutput).toHaveBeenCalledWith('base_path', '/my-repo')
   })
 
   it('gets expected outputs for site with custom domain name', async () => {
@@ -45,9 +45,9 @@ describe('outputPagesBaseUrl', () => {
 
     outputPagesBaseUrl(new URL(baseUrl))
 
-    expect(core.setOutput).toHaveBeenCalledWith('base_url', baseUrl)
+    expect(core.setOutput).toHaveBeenCalledWith('base_url', 'https://www.example.com')
     expect(core.setOutput).toHaveBeenCalledWith('origin', 'https://www.example.com')
     expect(core.setOutput).toHaveBeenCalledWith('host', 'www.example.com')
-    expect(core.setOutput).toHaveBeenCalledWith('base_path', '/')
+    expect(core.setOutput).toHaveBeenCalledWith('base_path', '')
   })
 })

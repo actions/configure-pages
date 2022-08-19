@@ -15571,15 +15571,30 @@ module.exports = { getContext }
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 const core = __nccwpck_require__(2186)
+const removeTrailingSlash = __nccwpck_require__(9255)
 
 function outputPagesBaseUrl(siteUrl) {
-  core.setOutput('base_url', siteUrl.href)
+  // Many static site generators do not want the trailing slash, and it is much easier to add than remove in a workflow
+  const baseUrl = removeTrailingSlash(siteUrl.href)
+  const basePath = removeTrailingSlash(siteUrl.pathname)
+
+  core.setOutput('base_url', baseUrl)
   core.setOutput('origin', siteUrl.origin)
   core.setOutput('host', siteUrl.host)
-  core.setOutput('base_path', siteUrl.pathname)
+  core.setOutput('base_path', basePath)
 }
 
 module.exports = outputPagesBaseUrl
+
+
+/***/ }),
+
+/***/ 9255:
+/***/ ((module) => {
+
+module.exports = function removeTrailingSlash(str) {
+  return str.endsWith('/') ? str.slice(0, -1) : str
+}
 
 
 /***/ }),
@@ -15589,6 +15604,7 @@ module.exports = outputPagesBaseUrl
 
 const core = __nccwpck_require__(2186)
 const { ConfigParser } = __nccwpck_require__(8395)
+const removeTrailingSlash = __nccwpck_require__(9255)
 
 // Return the settings to be passed to a {ConfigParser} for a given static site generator,
 // optional configuration file path, and a Pages path value to inject
@@ -15609,9 +15625,7 @@ function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, pat
       }
     case 'next':
       // Next does not want a trailing slash
-      if (path.endsWith('/')) {
-        path = path.slice(0, -1)
-      }
+      path = removeTrailingSlash(path)
 
       return {
         configurationFile: generatorConfigFile || './next.config.js',
@@ -15636,9 +15650,7 @@ function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, pat
       }
     case 'sveltekit':
       // SvelteKit does not want a trailing slash
-      if (path.endsWith('/')) {
-        path = path.slice(0, -1)
-      }
+      path = removeTrailingSlash(path)
 
       return {
         configurationFile: generatorConfigFile || './svelte.config.js',

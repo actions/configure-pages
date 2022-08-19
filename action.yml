@@ -21,10 +21,10 @@ inputs:
     required: false
 outputs:
   base_url:
-    description: 'GitHub Pages site full base URL. Examples: "https://octocat.github.io/my-repo/", "https://octocat.github.io/", "https://www.example.com/"'
+    description: 'GitHub Pages site full base URL. Examples: "https://octocat.github.io/my-repo", "https://octocat.github.io", "https://www.example.com"'
   origin:
     description: 'GitHub Pages site origin. Examples: "https://octocat.github.io", "https://www.example.com"'
   host:
     description: 'GitHub Pages site host. Examples: "octocat.github.io", "www.example.com"'
   base_path:
-    description: 'GitHub Pages site full base path. Examples: "/my-repo/" or "/"'
+    description: 'GitHub Pages site full base path. Examples: "/my-repo" or ""'
