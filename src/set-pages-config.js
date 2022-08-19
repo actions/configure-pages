@@ -3,8 +3,10 @@ const { ConfigParser } = require('./config-parser')
 const removeTrailingSlash = require('./remove-trailing-slash')
 
 // Return the settings to be passed to a {ConfigParser} for a given static site generator,
-// optional configuration file path, and a Pages path value to inject
-function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, path }) {
+// optional configuration file path, and a Pages siteUrl value to inject
+function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, siteUrl }) {
+  let { pathname, origin } = siteUrl
+
   switch (staticSiteGenerator) {
     case 'nuxt':
       return {
@@ -12,7 +14,7 @@ function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, pat
         blankConfigurationFile: `${__dirname}/blank-configurations/nuxt.js`,
         properties: {
           // Configure a base path on the router
-          'router.base': path,
+          'router.base': pathname,
 
           // Set the target to static too
           // https://nuxtjs.org/docs/configuration-glossary/configuration-target/
@@ -21,14 +23,14 @@ function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, pat
       }
     case 'next':
       // Next does not want a trailing slash
-      path = removeTrailingSlash(path)
+      pathname = removeTrailingSlash(pathname)
 
       return {
         configurationFile: generatorConfigFile || './next.config.js',
         blankConfigurationFile: `${__dirname}/blank-configurations/next.js`,
         properties: {
           // Configure a base path
-          basePath: path,
+          basePath: pathname,
 
           // Disable server side image optimization too
           // https://nextjs.org/docs/api-reference/next/image#unoptimized
@@ -41,19 +43,23 @@ function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, pat
         blankConfigurationFile: `${__dirname}/blank-configurations/gatsby.js`,
         properties: {
           // Configure a path prefix
-          pathPrefix: path
+          pathPrefix: pathname,
+          // Configure a site url
+          'siteMetadata.siteUrl': origin
         }
       }
     case 'sveltekit':
       // SvelteKit does not want a trailing slash
-      path = removeTrailingSlash(path)
+      pathname = removeTrailingSlash(pathname)
 
       return {
         configurationFile: generatorConfigFile || './svelte.config.js',
         blankConfigurationFile: `${__dirname}/blank-configurations/sveltekit.js`,
         properties: {
           // Configure a base path
-          'kit.paths.base': path
+          'kit.paths.base': pathname,
+          // Configure a prerender origin
+          'kit.prerender.origin': origin
         }
       }
     default:
@@ -62,10 +68,10 @@ function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, pat
 }
 
 // Inject Pages configuration in a given static site generator's configuration file
-function setPagesPath({ staticSiteGenerator, generatorConfigFile, path }) {
+function setPagesConfig({ staticSiteGenerator, generatorConfigFile, siteUrl }) {
   try {
     // Parse the configuration file and try to inject the Pages configuration in it
-    const settings = getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, path })
+    const settings = getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, siteUrl })
     new ConfigParser(settings).injectAll()
   } catch (error) {
     // Logging
@@ -76,4 +82,4 @@ function setPagesPath({ staticSiteGenerator, generatorConfigFile, path }) {
   }
 }
 
-module.exports = { getConfigParserSettings, setPagesPath }
+module.exports = { getConfigParserSettings, setPagesConfig }

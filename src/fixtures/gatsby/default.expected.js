@@ -1,8 +1,8 @@
 module.exports = {
   pathPrefix: '/docs/',
   siteMetadata: {
-    title: `My Gatsby Site`,
-    siteUrl: `https://www.yourdomain.tld`
+    siteUrl: 'https://configure-pages.github.io',
+    title: `My Gatsby Site`
   },
   plugins: []
 }
