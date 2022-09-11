@@ -15438,7 +15438,7 @@ class ConfigParser {
       throw 'Could not find a configuration object in the configuration file'
     }
 
-    // A property may be nested in the configuration file. Split the property name with `.`
+    // A property may be nested in the configuration file. Split the property name with '.'
     // then walk the configuration object one property at a time.
     var depth = 0
     const properties = propertyName.split('.')
@@ -15519,7 +15519,7 @@ class ConfigParser {
     }
 
     // Logging
-    core.info(`Injection successful, new configuration:`)
+    core.info('Injection successful, new configuration:')
     core.info(this.configuration)
 
     // Finally write the new configuration in the file
@@ -15609,7 +15609,7 @@ const removeTrailingSlash = __nccwpck_require__(9255)
 // Return the settings to be passed to a {ConfigParser} for a given static site generator,
 // optional configuration file path, and a Pages siteUrl value to inject
 function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, siteUrl }) {
-  let { pathname, origin } = siteUrl
+  let { pathname: path, origin } = siteUrl
 
   switch (staticSiteGenerator) {
     case 'nuxt':
@@ -15618,7 +15618,7 @@ function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, sit
         blankConfigurationFile: __nccwpck_require__.ab + "nuxt.js",
         properties: {
           // Configure a base path on the router
-          'router.base': pathname,
+          'router.base': path,
 
           // Set the target to static too
           // https://nuxtjs.org/docs/configuration-glossary/configuration-target/
@@ -15627,14 +15627,14 @@ function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, sit
       }
     case 'next':
       // Next does not want a trailing slash
-      pathname = removeTrailingSlash(pathname)
+      path = removeTrailingSlash(path)
 
       return {
         configurationFile: generatorConfigFile || './next.config.js',
         blankConfigurationFile: __nccwpck_require__.ab + "next.js",
         properties: {
           // Configure a base path
-          basePath: pathname,
+          basePath: path,
 
           // Disable server side image optimization too
           // https://nextjs.org/docs/api-reference/next/image#unoptimized
@@ -15647,21 +15647,21 @@ function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, sit
         blankConfigurationFile: __nccwpck_require__.ab + "gatsby.js",
         properties: {
           // Configure a path prefix
-          pathPrefix: pathname,
+          pathPrefix: path,
           // Configure a site url
           'siteMetadata.siteUrl': origin
         }
       }
     case 'sveltekit':
       // SvelteKit does not want a trailing slash
-      pathname = removeTrailingSlash(pathname)
+      path = removeTrailingSlash(path)
 
       return {
         configurationFile: generatorConfigFile || './svelte.config.js',
         blankConfigurationFile: __nccwpck_require__.ab + "sveltekit.js",
         properties: {
           // Configure a base path
-          'kit.paths.base': pathname,
+          'kit.paths.base': path,
           // Configure a prerender origin
           'kit.prerender.origin': origin
         }

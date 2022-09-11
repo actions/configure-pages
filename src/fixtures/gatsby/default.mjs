@@ -1,6 +1,6 @@
 export default {
   siteMetadata: {
-    title: `My Gatsby Site`
+    title: 'My Gatsby Site'
   },
   plugins: []
 }

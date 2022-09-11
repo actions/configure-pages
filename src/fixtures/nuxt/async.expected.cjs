@@ -7,7 +7,7 @@ const getAllDynamicRoute = async function() {
 
 module.exports = {
   target: 'static',
-  router: {base: '/docs/'},
+  router: { base: '/docs/' },
   mode: 'universal',
   generate: {
     async routes () {

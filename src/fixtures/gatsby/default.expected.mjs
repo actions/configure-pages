@@ -2,7 +2,7 @@ export default {
   pathPrefix: '/docs/',
   siteMetadata: {
     siteUrl: 'https://configure-pages.github.io',
-    title: `My Gatsby Site`
+    title: 'My Gatsby Site'
   },
   plugins: []
 }

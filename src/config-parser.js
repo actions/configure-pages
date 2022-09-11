@@ -184,7 +184,7 @@ class ConfigParser {
       throw 'Could not find a configuration object in the configuration file'
     }
 
-    // A property may be nested in the configuration file. Split the property name with `.`
+    // A property may be nested in the configuration file. Split the property name with '.'
     // then walk the configuration object one property at a time.
     var depth = 0
     const properties = propertyName.split('.')
@@ -265,7 +265,7 @@ class ConfigParser {
     }
 
     // Logging
-    core.info(`Injection successful, new configuration:`)
+    core.info('Injection successful, new configuration:')
     core.info(this.configuration)
 
     // Finally write the new configuration in the file
