@@ -5,7 +5,7 @@ const removeTrailingSlash = require('./remove-trailing-slash')
 // Return the settings to be passed to a {ConfigParser} for a given static site generator,
 // optional configuration file path, and a Pages siteUrl value to inject
 function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, siteUrl }) {
-  let { pathname, origin } = siteUrl
+  let { pathname: path, origin } = siteUrl
 
   switch (staticSiteGenerator) {
     case 'nuxt':
@@ -14,7 +14,7 @@ function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, sit
         blankConfigurationFile: `${__dirname}/blank-configurations/nuxt.js`,
         properties: {
           // Configure a base path on the router
-          'router.base': pathname,
+          'router.base': path,
 
           // Set the target to static too
           // https://nuxtjs.org/docs/configuration-glossary/configuration-target/
@@ -23,14 +23,14 @@ function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, sit
       }
     case 'next':
       // Next does not want a trailing slash
-      pathname = removeTrailingSlash(pathname)
+      path = removeTrailingSlash(path)
 
       return {
         configurationFile: generatorConfigFile || './next.config.js',
         blankConfigurationFile: `${__dirname}/blank-configurations/next.js`,
         properties: {
           // Configure a base path
-          basePath: pathname,
+          basePath: path,
 
           // Disable server side image optimization too
           // https://nextjs.org/docs/api-reference/next/image#unoptimized
@@ -43,21 +43,21 @@ function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, sit
         blankConfigurationFile: `${__dirname}/blank-configurations/gatsby.js`,
         properties: {
           // Configure a path prefix
-          pathPrefix: pathname,
+          pathPrefix: path,
           // Configure a site url
           'siteMetadata.siteUrl': origin
         }
       }
     case 'sveltekit':
       // SvelteKit does not want a trailing slash
-      pathname = removeTrailingSlash(pathname)
+      path = removeTrailingSlash(path)
 
       return {
         configurationFile: generatorConfigFile || './svelte.config.js',
         blankConfigurationFile: `${__dirname}/blank-configurations/sveltekit.js`,
         properties: {
           // Configure a base path
-          'kit.paths.base': pathname,
+          'kit.paths.base': path,
           // Configure a prerender origin
           'kit.prerender.origin': origin
         }
