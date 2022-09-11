@@ -4,7 +4,7 @@ const core = require('@actions/core')
 const { getContext } = require('./context')
 
 const { findOrCreatePagesSite } = require('./api-client')
-const { setPagesPath } = require('./set-pages-path')
+const { setPagesConfig } = require('./set-pages-config')
 const outputPagesBaseUrl = require('./output-pages-base-url')
 
 async function main() {
@@ -15,7 +15,7 @@ async function main() {
     const siteUrl = new URL(pageObject.html_url)
 
     if (staticSiteGenerator) {
-      setPagesPath({ staticSiteGenerator, generatorConfigFile, path: siteUrl.pathname })
+      setPagesConfig({ staticSiteGenerator, generatorConfigFile, siteUrl })
     }
     outputPagesBaseUrl(siteUrl)
     core.exportVariable('GITHUB_PAGES', 'true')

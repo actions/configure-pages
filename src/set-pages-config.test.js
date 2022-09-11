@@ -2,7 +2,7 @@ const fs = require('fs')
 const path = require('path')
 const core = require('@actions/core')
 
-const { getConfigParserSettings } = require('./set-pages-path')
+const { getConfigParserSettings } = require('./set-pages-config')
 const { ConfigParser } = require('./config-parser')
 const { getTempFolder, compareFiles } = require('./test-helpers')
 
@@ -32,6 +32,9 @@ describe('configParser', () => {
     // Get fixture files, excluding expected results
     const configurationFiles = fs.readdirSync(fixtureFolder).filter(filename => !filename.includes('.expected.'))
 
+    // Create test siteUrl
+    const siteUrl = new URL('https://configure-pages.github.io/docs/')
+
     // Iterate over the fixtures, outputting to default configuration file path
     const defaultFileExtension = '.js'
     configurationFiles
@@ -48,7 +51,7 @@ describe('configParser', () => {
           }
 
           // Get settings for the static site generator
-          const settings = getConfigParserSettings({ staticSiteGenerator, path: '/docs/' })
+          const settings = getConfigParserSettings({ staticSiteGenerator, siteUrl })
           // Update the settings
           settings.configurationFile = fixtureTargetFile
           // Do the injection
@@ -84,7 +87,7 @@ describe('configParser', () => {
             const settings = getConfigParserSettings({
               staticSiteGenerator,
               generatorConfigFile: fixtureTargetFile,
-              path: '/docs/'
+              siteUrl
             })
 
             // Do the injection
