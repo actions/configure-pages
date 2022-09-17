@@ -189,6 +189,7 @@ class ConfigParser {
     var depth = 0
     const properties = propertyName.split('.')
     var lastNode = configurationObject
+    // eslint-disable-next-line no-constant-condition
     while (true) {
       // Find the node for the current property
       var propertyNode = this.findProperty(lastNode, properties[depth])
