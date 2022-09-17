@@ -13,4 +13,3 @@
     "rules": {},
     "ignorePatterns": ["/dist/**/*.js", "/src/fixtures/", "/src/blank-configurations/"]
   }
-  
