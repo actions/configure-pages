@@ -1,4 +1,4 @@
-name: Checking formatting
+name: Check formatting
 
 on:
   push:
