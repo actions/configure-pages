@@ -5,11 +5,12 @@
   "description": "A GitHub Action to enable Pages and extract various metadata about a site. It can also be used to configure various static site generators we support as starter workflows.",
   "main": "./dist/index.js",
   "scripts": {
+    "all": "npm run format && npm run lint && npm run prepare && npm run test",
     "format": "prettier --write 'src/**/*.js'",
     "format:check": "prettier --check 'src/**/*.js'",
     "lint": "DEBUG=eslint:cli-engine eslint --fix .",
     "lint:check": "DEBUG=eslint:cli-engine eslint .",
-    "prepare": "npm run format && ncc build src/index.js -o dist --source-map --license licenses.txt",
+    "prepare": "ncc build src/index.js -o dist --source-map --license licenses.txt",
     "test": "jest"
   },
   "repository": {
