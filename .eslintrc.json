@@ -1,0 +1,16 @@
+{
+    "env": {
+      "commonjs": true,
+      "es2021": true,
+      "node": true,
+      "jest": true
+    },
+    "plugins": ["github"],
+    "extends": ["eslint:recommended", "prettier", "plugin:github/internal"],
+    "parserOptions": {
+      "ecmaVersion": 12
+    },
+    "rules": {},
+    "ignorePatterns": ["/dist/**/*.js", "/src/fixtures/", "/src/blank-configurations/"]
+  }
+  

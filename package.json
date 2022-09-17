@@ -7,7 +7,9 @@
   "scripts": {
     "format": "prettier --write 'src/**/*.js'",
     "format:check": "prettier --check 'src/**/*.js'",
-    "prepare": "npm run format && ncc build src/index.js -o dist --source-map --license licenses.txt",
+    "lint": "DEBUG=eslint:cli-engine eslint --fix .",
+    "lint:check": "DEBUG=eslint:cli-engine eslint .",
+    "prepare": "npm run format && npm run lint && ncc build src/index.js -o dist --source-map --license licenses.txt",
     "test": "jest"
   },
   "repository": {
