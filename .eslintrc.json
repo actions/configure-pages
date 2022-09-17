@@ -11,5 +11,5 @@
     "ecmaVersion": 12
   },
   "rules": {},
-  "ignorePatterns": ["/dist/**/*.js", "/src/fixtures/", "/src/blank-configurations/"]
+  "ignorePatterns": ["/dist/", "/src/fixtures/", "/src/blank-configurations/"]
 }
