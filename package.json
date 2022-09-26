@@ -26,9 +26,7 @@
   "dependencies": {
     "@actions/core": "^1.9.1",
     "axios": "^0.27.2",
-    "axios-retry": "^3.2.5",
-    "espree": "^9.3.2",
-    "string-format": "^1.0.0"
+    "espree": "^9.3.2"
   },
   "devDependencies": {
     "@vercel/ncc": "^0.34.0",
