@@ -2836,10 +2836,10 @@ module.exports = {
   var defaultOptions = {
     // `ecmaVersion` indicates the ECMAScript version to parse. Must be
     // either 3, 5, 6 (or 2015), 7 (2016), 8 (2017), 9 (2018), 10
-    // (2019), 11 (2020), 12 (2021), 13 (2022), or `"latest"` (the
-    // latest version the library supports). This influences support
-    // for strict mode, the set of reserved words, and support for
-    // new syntax features.
+    // (2019), 11 (2020), 12 (2021), 13 (2022), 14 (2023), or `"latest"`
+    // (the latest version the library supports). This influences
+    // support for strict mode, the set of reserved words, and support
+    // for new syntax features.
     ecmaVersion: null,
     // `sourceType` indicates the mode the code should be parsed in.
     // Can be either `"script"` or `"module"`. This influences global
@@ -2873,8 +2873,9 @@ module.exports = {
     // When enabled, super identifiers are not constrained to
     // appearing in methods and do not raise an error when they appear elsewhere.
     allowSuperOutsideMethod: null,
-    // When enabled, hashbang directive in the beginning of file
-    // is allowed and treated as a line comment.
+    // When enabled, hashbang directive in the beginning of file is
+    // allowed and treated as a line comment. Enabled by default when
+    // `ecmaVersion` >= 2023.
     allowHashBang: false,
     // When `locations` is on, `loc` properties holding objects with
     // `start` and `end` properties in `{line, column}` form (with
@@ -2948,6 +2949,9 @@ module.exports = {
 
     if (options.allowReserved == null)
       { options.allowReserved = options.ecmaVersion < 5; }
+
+    if (opts.allowHashBang == null)
+      { options.allowHashBang = options.ecmaVersion >= 14; }
 
     if (isArray(options.onToken)) {
       var tokens = options.onToken;
@@ -3279,7 +3283,7 @@ module.exports = {
     if (refDestructuringErrors.trailingComma > -1)
       { this.raiseRecoverable(refDestructuringErrors.trailingComma, "Comma is not permitted after the rest element"); }
     var parens = isAssign ? refDestructuringErrors.parenthesizedAssign : refDestructuringErrors.parenthesizedBind;
-    if (parens > -1) { this.raiseRecoverable(parens, "Parenthesized pattern"); }
+    if (parens > -1) { this.raiseRecoverable(parens, isAssign ? "Assigning to rvalue" : "Parenthesized pattern"); }
   };
 
   pp$9.checkExpressionErrors = function(refDestructuringErrors, andThrow) {
@@ -4375,6 +4379,7 @@ module.exports = {
   };
   pp$8.isDirectiveCandidate = function(statement) {
     return (
+      this.options.ecmaVersion >= 5 &&
       statement.type === "ExpressionStatement" &&
       statement.expression.type === "Literal" &&
       typeof statement.expression.value === "string" &&
@@ -4785,7 +4790,8 @@ module.exports = {
       { this.exprAllowed = type.beforeExpr; }
   };
 
-  // Used to handle egde case when token context could not be inferred correctly in tokenize phase
+  // Used to handle egde cases when token context could not be inferred correctly during tokenization phase
+
   pp$6.overrideContext = function(tokenCtx) {
     if (this.curContext() !== tokenCtx) {
       this.context[this.context.length - 1] = tokenCtx;
@@ -5600,15 +5606,6 @@ module.exports = {
           this.raise(this.start, "Comma is not permitted after the rest element");
         }
         return this.finishNode(prop, "RestElement")
-      }
-      // To disallow parenthesized identifier via `this.toAssignable()`.
-      if (this.type === types$1.parenL && refDestructuringErrors) {
-        if (refDestructuringErrors.parenthesizedAssign < 0) {
-          refDestructuringErrors.parenthesizedAssign = this.start;
-        }
-        if (refDestructuringErrors.parenthesizedBind < 0) {
-          refDestructuringErrors.parenthesizedBind = this.start;
-        }
       }
       // Parse argument.
       prop.argument = this.parseMaybeAssign(false, refDestructuringErrors);
@@ -8039,7 +8036,7 @@ module.exports = {
 
   // Acorn is a tiny, fast JavaScript parser written in JavaScript.
 
-  var version = "8.7.1";
+  var version = "8.8.0";
 
   Parser.acorn = {
     Parser: Parser,
@@ -15189,21 +15186,17 @@ async function enablePagesSite({ repositoryNwo, githubToken }) {
 }
 
 async function getPagesSite({ repositoryNwo, githubToken }) {
-  try {
-    const pagesEndpoint = `${getApiBaseUrl()}/repos/${repositoryNwo}/pages`
+  const pagesEndpoint = `${getApiBaseUrl()}/repos/${repositoryNwo}/pages`
 
-    const response = await axios.get(pagesEndpoint, {
-      headers: {
-        Accept: 'application/vnd.github.v3+json',
-        Authorization: `Bearer ${githubToken}`
-      }
-    })
+  const response = await axios.get(pagesEndpoint, {
+    headers: {
+      Accept: 'application/vnd.github.v3+json',
+      Authorization: `Bearer ${githubToken}`
+    }
+  })
 
-    const pageObject = response.data
-    return pageObject
-  } catch (error) {
-    throw error
-  }
+  const pageObject = response.data
+  return pageObject
 }
 
 async function findOrCreatePagesSite({ repositoryNwo, githubToken, enablement = true }) {
@@ -15443,6 +15436,7 @@ class ConfigParser {
     var depth = 0
     const properties = propertyName.split('.')
     var lastNode = configurationObject
+    // eslint-disable-next-line no-constant-condition
     while (true) {
       // Find the node for the current property
       var propertyNode = this.findProperty(lastNode, properties[depth])
@@ -15680,7 +15674,7 @@ function setPagesConfig({ staticSiteGenerator, generatorConfigFile, siteUrl }) {
   } catch (error) {
     // Logging
     core.warning(
-      `We were unable to determine how to inject the site metadata into your config. Generated URLs may be incorrect. The base URL for this site should be ${path}. Please ensure your framework is configured to generate relative links appropriately.`,
+      `We were unable to determine how to inject the site metadata into your config. Generated URLs may be incorrect. The base URL for this site should be ${siteUrl}. Please ensure your framework is configured to generate relative links appropriately.`,
       error
     )
   }
@@ -16509,14 +16503,15 @@ TokenTranslator.prototype = {
 const SUPPORTED_VERSIONS = [
     3,
     5,
-    6,
-    7,
-    8,
-    9,
-    10,
-    11,
-    12,
-    13
+    6, // 2015
+    7, // 2016
+    8, // 2017
+    9, // 2018
+    10, // 2019
+    11, // 2020
+    12, // 2021
+    13, // 2022
+    14 // 2023
 ];
 
 /**
@@ -16634,12 +16629,23 @@ const ESPRIMA_FINISH_NODE = Symbol("espree's esprimaFinishNode");
  * @param {int} end The index at which the comment ends.
  * @param {Location} startLoc The location at which the comment starts.
  * @param {Location} endLoc The location at which the comment ends.
+ * @param {string} code The source code being parsed.
  * @returns {Object} The comment object.
  * @private
  */
-function convertAcornCommentToEsprimaComment(block, text, start, end, startLoc, endLoc) {
+function convertAcornCommentToEsprimaComment(block, text, start, end, startLoc, endLoc, code) {
+    let type;
+
+    if (block) {
+        type = "Block";
+    } else if (code.slice(start, start + 2) === "#!") {
+        type = "Hashbang";
+    } else {
+        type = "Line";
+    }
+
     const comment = {
-        type: block ? "Block" : "Line",
+        type,
         value: text
     };
 
@@ -16684,6 +16690,25 @@ var espree = () => Parser => {
                     ? new TokenTranslator(tokTypes, code)
                     : null;
 
+            /*
+             * Data that is unique to Espree and is not represented internally
+             * in Acorn.
+             *
+             * For ES2023 hashbangs, Espree will call `onComment()` during the
+             * constructor, so we must define state before having access to
+             * `this`.
+             */
+            const state = {
+                originalSourceType: originalSourceType || options.sourceType,
+                tokens: tokenTranslator ? [] : null,
+                comments: options.comment === true ? [] : null,
+                impliedStrict: ecmaFeatures.impliedStrict === true && options.ecmaVersion >= 5,
+                ecmaVersion: options.ecmaVersion,
+                jsxAttrValueToken: false,
+                lastToken: null,
+                templateElements: []
+            };
+
             // Initialize acorn parser.
             super({
 
@@ -16702,38 +16727,28 @@ var espree = () => Parser => {
                     if (tokenTranslator) {
 
                         // Use `tokens`, `ecmaVersion`, and `jsxAttrValueToken` in the state.
-                        tokenTranslator.onToken(token, this[STATE]);
+                        tokenTranslator.onToken(token, state);
                     }
                     if (token.type !== tokTypes.eof) {
-                        this[STATE].lastToken = token;
+                        state.lastToken = token;
                     }
                 },
 
                 // Collect comments
                 onComment: (block, text, start, end, startLoc, endLoc) => {
-                    if (this[STATE].comments) {
-                        const comment = convertAcornCommentToEsprimaComment(block, text, start, end, startLoc, endLoc);
+                    if (state.comments) {
+                        const comment = convertAcornCommentToEsprimaComment(block, text, start, end, startLoc, endLoc, code);
 
-                        this[STATE].comments.push(comment);
+                        state.comments.push(comment);
                     }
                 }
             }, code);
 
             /*
-             * Data that is unique to Espree and is not represented internally in
-             * Acorn. We put all of this data into a symbol property as a way to
-             * avoid potential naming conflicts with future versions of Acorn.
+             * We put all of this data into a symbol property as a way to avoid
+             * potential naming conflicts with future versions of Acorn.
              */
-            this[STATE] = {
-                originalSourceType: originalSourceType || options.sourceType,
-                tokens: tokenTranslator ? [] : null,
-                comments: options.comment === true ? [] : null,
-                impliedStrict: ecmaFeatures.impliedStrict === true && this.options.ecmaVersion >= 5,
-                ecmaVersion: this.options.ecmaVersion,
-                jsxAttrValueToken: false,
-                lastToken: null,
-                templateElements: []
-            };
+            this[STATE] = state;
         }
 
         tokenize() {
@@ -16946,7 +16961,7 @@ var espree = () => Parser => {
     };
 };
 
-const version$1 = "9.3.2";
+const version$1 = "9.4.0";
 
 /**
  * @fileoverview Main Espree file that converts Acorn into Esprima output.
