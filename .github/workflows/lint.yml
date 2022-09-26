@@ -1,4 +1,4 @@
-name: Check formatting
+name: Lint code
 
 on:
   push:
@@ -15,21 +15,21 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
+  lint:
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
-      - name: Checkout
+      - name: Check out repo
         uses: actions/checkout@v3
 
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
           node-version: 16.x
-          cache: 'npm'
+          cache: npm
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Verify formatting
-        run: npm run format:check
+      - name: Run linter
+        run: npm run lint:check

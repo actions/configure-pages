@@ -1,0 +1,5 @@
+# Ignore build artifacts
+/dist/
+
+# Ignore all Markdown files
+*.md
