@@ -5,9 +5,12 @@
   "description": "A GitHub Action to enable Pages and extract various metadata about a site. It can also be used to configure various static site generators we support as starter workflows.",
   "main": "./dist/index.js",
   "scripts": {
+    "all": "npm run format && npm run lint && npm run prepare && npm run test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prepare": "npm run format && ncc build src/index.js -o dist --source-map --license licenses.txt",
+    "lint": "DEBUG=eslint:cli-engine eslint --fix .",
+    "lint:check": "DEBUG=eslint:cli-engine eslint .",
+    "prepare": "ncc build src/index.js -o dist --source-map --license licenses.txt",
     "test": "jest"
   },
   "repository": {
@@ -29,6 +32,9 @@
   },
   "devDependencies": {
     "@vercel/ncc": "^0.34.0",
+    "eslint": "^8.23.1",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-github": "^4.3.7",
     "jest": "^28.1.1",
     "prettier": "^2.7.1"
   }

@@ -33,21 +33,17 @@ async function enablePagesSite({ repositoryNwo, githubToken }) {
 }
 
 async function getPagesSite({ repositoryNwo, githubToken }) {
-  try {
-    const pagesEndpoint = `${getApiBaseUrl()}/repos/${repositoryNwo}/pages`
+  const pagesEndpoint = `${getApiBaseUrl()}/repos/${repositoryNwo}/pages`
 
-    const response = await axios.get(pagesEndpoint, {
-      headers: {
-        Accept: 'application/vnd.github.v3+json',
-        Authorization: `Bearer ${githubToken}`
-      }
-    })
+  const response = await axios.get(pagesEndpoint, {
+    headers: {
+      Accept: 'application/vnd.github.v3+json',
+      Authorization: `Bearer ${githubToken}`
+    }
+  })
 
-    const pageObject = response.data
-    return pageObject
-  } catch (error) {
-    throw error
-  }
+  const pageObject = response.data
+  return pageObject
 }
 
 async function findOrCreatePagesSite({ repositoryNwo, githubToken, enablement = true }) {
