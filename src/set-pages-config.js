@@ -74,11 +74,20 @@ function setPagesConfig({ staticSiteGenerator, generatorConfigFile, siteUrl }) {
     const settings = getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, siteUrl })
     new ConfigParser(settings).injectAll()
   } catch (error) {
+    const supportedFileExtension = ['.js', '.cjs', '.mjs'].some(extension => generatorConfigFile.endsWith(extension))
+
     // Logging
-    core.warning(
-      `We were unable to determine how to inject the site metadata into your config. Generated URLs may be incorrect. The base URL for this site should be ${siteUrl}. Please ensure your framework is configured to generate relative links appropriately.`,
-      error
-    )
+    if (!supportedFileExtension) {
+      core.warning(
+        `We were unable to determine how to inject the site metadata into your config. Currently we only support ".js", ".cjs" and ".mjs".`,
+        error
+      )
+    } else {
+      core.warning(
+        `We were unable to determine how to inject the site metadata into your config. Generated URLs may be incorrect. The base URL for this site should be ${siteUrl}. Please ensure your framework is configured to generate relative links appropriately.`,
+        error
+      )
+    }
   }
 }
 
