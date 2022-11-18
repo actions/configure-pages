@@ -10,7 +10,7 @@ const tempFolder = getTempFolder()
 // Cases to test
 const cases = [
   //
-  // Default export
+  // Direct default export
   //
   {
     property: 'property',
@@ -154,6 +154,73 @@ const cases = [
     property: 'a.b.c',
     source: 'var config = { a: { b: [], c: "hello" } }; module.exports = config',
     expected: 'var config = { a: { b: { c: "value"}, c: "hello" } }; module.exports = config'
+  },
+
+  //
+  // Direct default export with wrapping call
+  //
+  {
+    property: 'property',
+    source: 'import { defineConfig } from "astro/config"; export default defineConfig({ p1: 0 })',
+    expected: 'import { defineConfig } from "astro/config"; export default defineConfig({ property: "value", p1: 0 })',
+    allowWrappingCall: true
+  },
+
+  //
+  // Direct module exports with wrapping call
+  //
+  {
+    property: 'property',
+    source: 'const { defineConfig } = require("astro/config"); module.exports = defineConfig({ p1: 0 })',
+    expected:
+      'const { defineConfig } = require("astro/config"); module.exports = defineConfig({ property: "value", p1: 0 })',
+    allowWrappingCall: true
+  },
+
+  //
+  // Indirect default export with wrapping call at the definition
+  //
+  {
+    property: 'property',
+    source: 'import { defineConfig } from "astro/config"; const config = defineConfig({}); export default config',
+    expected:
+      'import { defineConfig } from "astro/config"; const config = defineConfig({ property: "value" }); export default config',
+    allowWrappingCall: true
+  },
+
+  //
+  // Indirect default export with wrapping call at the export
+  //
+  {
+    property: 'property',
+    source: 'import { defineConfig } from "astro/config"; const config = {}; export default defineConfig(config)',
+    expected:
+      'import { defineConfig } from "astro/config"; const config = { property: "value" }; export default defineConfig(config)',
+    allowWrappingCall: true
+  },
+
+  //
+  // Indirect module exports with wrapping call at the definition
+  //
+  {
+    property: 'property',
+    source:
+      'const { defineConfig } = require("astro/config"); const config = defineConfig({}); module.exports = config',
+    expected:
+      'const { defineConfig } = require("astro/config"); const config = defineConfig({ property: "value"}); module.exports = config',
+    allowWrappingCall: true
+  },
+
+  //
+  // Indirect module exports with wrapping call at the export
+  //
+  {
+    property: 'property',
+    source:
+      'const { defineConfig } = require("astro/config"); const config = {}; module.exports = defineConfig(config)',
+    expected:
+      'const { defineConfig } = require("astro/config"); const config = { property: "value"}; module.exports = defineConfig(config)',
+    allowWrappingCall: true
   }
 ]
 
@@ -168,7 +235,7 @@ describe('config-parser', () => {
     jest.spyOn(core, 'debug').mockImplementation(jest.fn())
   })
 
-  cases.forEach(({ property, source, expected }, index) => {
+  cases.forEach(({ property, source, expected, allowWrappingCall = false }, index) => {
     it(`injects path properly for case #${index}`, () => {
       // Write the source file
       const sourceFile = `${tempFolder}/source.js`
@@ -180,7 +247,8 @@ describe('config-parser', () => {
 
       // Update the settings and do the injection
       new ConfigParser({
-        configurationFile: sourceFile
+        configurationFile: sourceFile,
+        allowWrappingCall
       }).inject(property, 'value')
 
       // Compare the files
