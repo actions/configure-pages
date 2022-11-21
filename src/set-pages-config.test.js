@@ -9,8 +9,12 @@ const { getTempFolder, compareFiles } = require('./test-helpers')
 // Get the temp folder
 const tempFolder = getTempFolder()
 
-const SUPPORTED_GENERATORS = ['next', 'nuxt', 'gatsby', 'sveltekit']
+const SUPPORTED_GENERATORS = ['next', 'nuxt', 'gatsby', 'sveltekit', 'astro']
 const SUPPORTED_FILE_EXTENSIONS = ['.js', '.cjs', '.mjs']
+
+function isBlankConfigFileName(fileName) {
+  return /^blank.[mc]?js$/.test(fileName)
+}
 
 // Test suite
 describe('configParser', () => {
@@ -44,7 +48,7 @@ describe('configParser', () => {
           // Copy the source fixture to a temp file
           const fixtureSourceFile = `${fixtureFolder}/${configurationFile}`
           const fixtureTargetFile = `${tempFolder}/${configurationFile}`
-          if (configurationFile !== 'blank.js') {
+          if (!isBlankConfigFileName(configurationFile)) {
             fs.copyFileSync(fixtureSourceFile, fixtureTargetFile)
           } else if (fs.existsSync(fixtureTargetFile)) {
             fs.rmSync(fixtureTargetFile)
@@ -77,7 +81,7 @@ describe('configParser', () => {
             // Copy the source fixture to a temp file
             const fixtureSourceFile = `${fixtureFolder}/${configurationFile}`
             const fixtureTargetFile = `${tempFolder}/${configurationFile}`
-            if (configurationFile !== 'blank.js') {
+            if (!isBlankConfigFileName(configurationFile)) {
               fs.copyFileSync(fixtureSourceFile, fixtureTargetFile)
             } else if (fs.existsSync(fixtureTargetFile)) {
               fs.rmSync(fixtureTargetFile)
