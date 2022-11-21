@@ -190,7 +190,9 @@ class ConfigParser {
       )
       const identifierInitialization = identifierDefinition && identifierDefinition.declarations[0].init
       if (identifierInitialization && identifierInitialization.type === 'ObjectExpression') {
-        core.info('Found configuration object in indirect default export declaration with a wrapping call at the export')
+        core.info(
+          'Found configuration object in indirect default export declaration with a wrapping call at the export'
+        )
         return identifierInitialization
       }
     }
