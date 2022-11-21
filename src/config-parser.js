@@ -236,21 +236,24 @@ class ConfigParser {
           node.declarations[0].type === 'VariableDeclarator' &&
           node.declarations[0].id.type === 'Identifier' &&
           node.declarations[0].id.name === identifierName &&
-          node.declarations[0].init.type === 'ObjectExpression'
+          node.declarations[0].init
       )
-      if (identifierDefinition) {
+      const identifierInitialization = identifierDefinition && identifierDefinition.declarations[0].init
+      if (identifierInitialization && identifierInitialization.type === 'ObjectExpression') {
         core.info('Found configuration object in indirect module export')
-        return identifierDefinition.declarations[0].init
+        return identifierInitialization
       }
-    }
-
-    // Indirect default export with a wrapping call at the definition
-    else if (
-      false
-      // ...
-    ) {
-      core.info('Found configuration object in indirect module export with a wrapping call at the definition')
-      return defaultExport.declaration.arguments[0]
+      // Indirect module export with a wrapping call at the definition
+      else if (
+        identifierInitialization &&
+        identifierInitialization.type === 'CallExpression' &&
+        identifierInitialization.arguments.length > 0 &&
+        identifierInitialization.arguments[0] &&
+        identifierInitialization.arguments[0].type === 'ObjectExpression'
+      ) {
+        core.info('Found configuration object in indirect module export with a wrapping call at the definition')
+        return identifierInitialization.arguments[0]
+      }
     }
 
     // Indirect default export with a wrapping call at the export
