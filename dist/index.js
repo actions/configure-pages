@@ -15361,6 +15361,28 @@ class ConfigParser {
     this.configuration = fs.readFileSync(this.configurationFile, 'utf8')
   }
 
+  findTopLevelVariableDeclarator(ast, identifierName) {
+    let targetDeclarator
+    ast.body.find(
+      node =>
+        node.type === 'VariableDeclaration' &&
+        node.declarations &&
+        node.declarations.length > 0 &&
+        node.declarations.find(declarator => {
+          if (
+            declarator.type === 'VariableDeclarator' &&
+            declarator.id &&
+            declarator.id.type === 'Identifier' &&
+            declarator.id.name === identifierName
+          ) {
+            targetDeclarator = declarator
+            return true
+          }
+        })
+    )
+    return targetDeclarator
+  }
+
   // Find the configuration object in an AST.
   // Look for, in order:
   //  - a direct default export
@@ -15401,16 +15423,8 @@ class ConfigParser {
     // Indirect default export
     else if (defaultExport && defaultExport.declaration.type === 'Identifier') {
       const identifierName = defaultExport.declaration.name
-      const identifierDefinition = ast.body.find(
-        node =>
-          node.type === 'VariableDeclaration' &&
-          node.declarations.length == 1 &&
-          node.declarations[0].type === 'VariableDeclarator' &&
-          node.declarations[0].id.type === 'Identifier' &&
-          node.declarations[0].id.name === identifierName &&
-          node.declarations[0].init
-      )
-      const identifierInitialization = identifierDefinition && identifierDefinition.declarations[0].init
+      const identifierDeclarator = this.findTopLevelVariableDeclarator(ast, identifierName)
+      const identifierInitialization = identifierDeclarator && identifierDeclarator.init
       if (identifierInitialization && identifierInitialization.type === 'ObjectExpression') {
         core.info('Found configuration object in indirect default export declaration')
         return identifierInitialization
@@ -15441,16 +15455,8 @@ class ConfigParser {
       defaultExport.declaration.arguments[0].type === 'Identifier'
     ) {
       const identifierName = defaultExport.declaration.arguments[0].name
-      const identifierDefinition = ast.body.find(
-        node =>
-          node.type === 'VariableDeclaration' &&
-          node.declarations.length == 1 &&
-          node.declarations[0].type === 'VariableDeclarator' &&
-          node.declarations[0].id.type === 'Identifier' &&
-          node.declarations[0].id.name === identifierName &&
-          node.declarations[0].init
-      )
-      const identifierInitialization = identifierDefinition && identifierDefinition.declarations[0].init
+      const identifierDeclarator = this.findTopLevelVariableDeclarator(ast, identifierName)
+      const identifierInitialization = identifierDeclarator && identifierDeclarator.init
       if (identifierInitialization && identifierInitialization.type === 'ObjectExpression') {
         core.info(
           'Found configuration object in indirect default export declaration with a wrapping call at the export'
@@ -15494,16 +15500,8 @@ class ConfigParser {
     // Indirect module export
     else if (moduleExport && moduleExport.expression.right.type === 'Identifier') {
       const identifierName = moduleExport && moduleExport.expression.right.name
-      const identifierDefinition = ast.body.find(
-        node =>
-          node.type === 'VariableDeclaration' &&
-          node.declarations.length == 1 &&
-          node.declarations[0].type === 'VariableDeclarator' &&
-          node.declarations[0].id.type === 'Identifier' &&
-          node.declarations[0].id.name === identifierName &&
-          node.declarations[0].init
-      )
-      const identifierInitialization = identifierDefinition && identifierDefinition.declarations[0].init
+      const identifierDeclarator = this.findTopLevelVariableDeclarator(ast, identifierName)
+      const identifierInitialization = identifierDeclarator && identifierDeclarator.init
       if (identifierInitialization && identifierInitialization.type === 'ObjectExpression') {
         core.info('Found configuration object in indirect module export')
         return identifierInitialization
@@ -15532,16 +15530,8 @@ class ConfigParser {
       moduleExport.expression.right.arguments[0].type === 'Identifier'
     ) {
       const identifierName = moduleExport.expression.right.arguments[0].name
-      const identifierDefinition = ast.body.find(
-        node =>
-          node.type === 'VariableDeclaration' &&
-          node.declarations.length == 1 &&
-          node.declarations[0].type === 'VariableDeclarator' &&
-          node.declarations[0].id.type === 'Identifier' &&
-          node.declarations[0].id.name === identifierName &&
-          node.declarations[0].init
-      )
-      const identifierInitialization = identifierDefinition && identifierDefinition.declarations[0].init
+      const identifierDeclarator = this.findTopLevelVariableDeclarator(ast, identifierName)
+      const identifierInitialization = identifierDeclarator && identifierDeclarator.init
       if (identifierInitialization && identifierInitialization.type === 'ObjectExpression') {
         core.info('Found configuration object in indirect module export declaration with a wrapping call at the export')
         return identifierInitialization
