@@ -155,6 +155,7 @@ class ConfigParser {
       }
       // Indirect default export with a wrapping call at the definition
       else if (
+        allowWrappingCall &&
         identifierInitialization &&
         identifierInitialization.type === 'CallExpression' &&
         identifierInitialization.arguments.length > 0 &&
@@ -245,6 +246,7 @@ class ConfigParser {
       }
       // Indirect module export with a wrapping call at the definition
       else if (
+        allowWrappingCall &&
         identifierInitialization &&
         identifierInitialization.type === 'CallExpression' &&
         identifierInitialization.arguments.length > 0 &&
@@ -256,7 +258,7 @@ class ConfigParser {
       }
     }
 
-    // Indirect default export with a wrapping call at the export
+    // Indirect module export with a wrapping call at the export
     else if (
       false
       // ...
