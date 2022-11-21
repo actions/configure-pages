@@ -62,6 +62,21 @@ function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, sit
           'kit.prerender.origin': origin
         }
       }
+    case 'astro':
+      // Astro does not want a trailing slash
+      path = removeTrailingSlash(path)
+
+      return {
+        configurationFile: generatorConfigFile || './astro.config.mjs',
+        blankConfigurationFile: `${__dirname}/blank-configurations/astro.mjs`,
+        allowWrappingCall: true,
+        properties: {
+          // Configure a base path
+          base: path,
+          // Configure a prerender origin
+          site: origin
+        }
+      }
     default:
       throw `Unsupported static site generator: ${staticSiteGenerator}`
   }

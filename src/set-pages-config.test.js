@@ -9,7 +9,7 @@ const { getTempFolder, compareFiles } = require('./test-helpers')
 // Get the temp folder
 const tempFolder = getTempFolder()
 
-const SUPPORTED_GENERATORS = ['next', 'nuxt', 'gatsby', 'sveltekit']
+const SUPPORTED_GENERATORS = ['next', 'nuxt', 'gatsby', 'sveltekit'] //, 'astro']
 const SUPPORTED_FILE_EXTENSIONS = ['.js', '.cjs', '.mjs']
 
 // Test suite
