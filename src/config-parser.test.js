@@ -97,11 +97,13 @@ const cases = [
     source: 'const config = {}; export default config',
     expected: 'const config = { property: "value"}; export default config'
   },
+  // with more than 1 declaration chained together
   {
     property: 'property',
-    source: 'var config = {}; export default config',
-    expected: 'var config = { property: "value"}; export default config'
+    source: 'var temp = {}, config = {}; export default config',
+    expected: 'var temp = {}, config = { property: "value"}; export default config'
   },
+  // deeper
   {
     property: 'a.b.c',
     source: 'var config = {}; export default config',
@@ -140,11 +142,13 @@ const cases = [
     source: 'const config = {}; module.exports = config',
     expected: 'const config = { property: "value"}; module.exports = config'
   },
+  // with more than 1 declaration chained together
   {
     property: 'property',
-    source: 'var config = {}; module.exports = config',
-    expected: 'var config = { property: "value"}; module.exports = config'
+    source: 'var temp = {}, config = {}; module.exports = config',
+    expected: 'var temp = {}, config = { property: "value"}; module.exports = config'
   },
+  // deeper
   {
     property: 'a.b.c',
     source: 'var config = {}; module.exports = config',
@@ -187,6 +191,15 @@ const cases = [
       'import { defineConfig } from "astro/config"; const config = defineConfig({ property: "value" }); export default config',
     allowWrappingCall: true
   },
+  // with more than 1 declaration chained together
+  {
+    property: 'property',
+    source:
+      'import { defineConfig } from "astro/config"; const temp = {}, config = defineConfig({}); export default config',
+    expected:
+      'import { defineConfig } from "astro/config"; const temp = {}, config = defineConfig({ property: "value" }); export default config',
+    allowWrappingCall: true
+  },
 
   //
   // Indirect default export with wrapping call at the export
@@ -196,6 +209,15 @@ const cases = [
     source: 'import { defineConfig } from "astro/config"; const config = {}; export default defineConfig(config)',
     expected:
       'import { defineConfig } from "astro/config"; const config = { property: "value" }; export default defineConfig(config)',
+    allowWrappingCall: true
+  },
+  // with more than 1 declaration chained together
+  {
+    property: 'property',
+    source:
+      'import { defineConfig } from "astro/config"; const temp = {}, config = {}; export default defineConfig(config)',
+    expected:
+      'import { defineConfig } from "astro/config"; const temp = {}, config = { property: "value" }; export default defineConfig(config)',
     allowWrappingCall: true
   },
 
@@ -210,6 +232,15 @@ const cases = [
       'const { defineConfig } = require("astro/config"); const config = defineConfig({ property: "value"}); module.exports = config',
     allowWrappingCall: true
   },
+  // with more than 1 declaration chained together
+  {
+    property: 'property',
+    source:
+      'const { defineConfig } = require("astro/config"); const temp = {}, config = defineConfig({}); module.exports = config',
+    expected:
+      'const { defineConfig } = require("astro/config"); const temp = {}, config = defineConfig({ property: "value"}); module.exports = config',
+    allowWrappingCall: true
+  },
 
   //
   // Indirect module exports with wrapping call at the export
@@ -220,6 +251,15 @@ const cases = [
       'const { defineConfig } = require("astro/config"); const config = {}; module.exports = defineConfig(config)',
     expected:
       'const { defineConfig } = require("astro/config"); const config = { property: "value"}; module.exports = defineConfig(config)',
+    allowWrappingCall: true
+  },
+  // with more than 1 declaration chained together
+  {
+    property: 'property',
+    source:
+      'const { defineConfig } = require("astro/config"); const temp = {}, config = {}; module.exports = defineConfig(config)',
+    expected:
+      'const { defineConfig } = require("astro/config"); const temp = {}, config = { property: "value"}; module.exports = defineConfig(config)',
     allowWrappingCall: true
   }
 ]
