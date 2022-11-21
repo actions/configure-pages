@@ -9,7 +9,7 @@ Pages's path based routing (and work).
 
 Supported configuration initializations:
 
-(1) Default export:
+(1) Direct default export:
 
   export default {
     // configuration object here
@@ -21,19 +21,69 @@ Supported configuration initializations:
     // configuration object here
   }
 
-(3) Indirect module export:
+(3) Indirect default export:
 
-  const config = // configuration object here
+  const config = {
+    // configuration object here
+  }
+  export default config
+
+(4) Indirect module export:
+
+  const config = {
+    // configuration object here
+  }
   module.exports = config
+
+(5) Direct default export with wrapping call:
+
+  export default defineConfig({
+    // configuration object here
+  })
+
+(6) Direct module export with wrapping call:
+
+  module.exports = defineConfig({
+    // configuration object here
+  })
+
+(7) Indirect default export with wrapping call at the definition:
+
+  const config = defineConfig({
+    // configuration object here
+  })
+  export default config
+
+(8) Indirect default export with wrapping call at the export:
+
+  const config = {
+    // configuration object here
+  }
+  export default defineConfig(config)
+
+(9) Indirect module export with wrapping call at the definition:
+
+  const config = defineConfig({
+    // configuration object here
+  })
+  module.exports = config
+
+(10) Indirect module export with wrapping call at the export:
+
+  const config = {
+    // configuration object here
+  }
+  module.exports = defineConfig(config)
 */
 
 class ConfigParser {
   // Ctor
   // - configurationFile: path to the configuration file
   // - blankConfigurationFile: a blank configuration file to use if non was previously found
-  constructor({ configurationFile, blankConfigurationFile, properties }) {
+  constructor({ configurationFile, blankConfigurationFile, allowWrappingCall = false, properties }) {
     // Save field
     this.configurationFile = configurationFile
+    this.allowWrappingCall = allowWrappingCall === true
     this.properties = properties
 
     // If the configuration file does not exist, initialize it with the blank configuration file
@@ -49,12 +99,43 @@ class ConfigParser {
     this.configuration = fs.readFileSync(this.configurationFile, 'utf8')
   }
 
+  findTopLevelVariableDeclarator(ast, identifierName) {
+    let targetDeclarator
+    ast.body.find(
+      node =>
+        node.type === 'VariableDeclaration' &&
+        node.declarations &&
+        node.declarations.length > 0 &&
+        node.declarations.find(declarator => {
+          if (
+            declarator.type === 'VariableDeclarator' &&
+            declarator.id &&
+            declarator.id.type === 'Identifier' &&
+            declarator.id.name === identifierName
+          ) {
+            targetDeclarator = declarator
+            return true
+          }
+        })
+    )
+    return targetDeclarator
+  }
+
   // Find the configuration object in an AST.
-  // Look for a default export, a direct module export or an indirect module
-  // export (in that order).
+  // Look for, in order:
+  //  - a direct default export
+  //  - a direct default export with a wrapping call
+  //  - an indirect default export
+  //  - an indirect default export with a wrapping call at the definition
+  //  - an indirect default export with a wrapping call at the export
+  //  - a direct module export
+  //  - a direct module export with a wrapping call
+  //  - an indirect module export
+  //  - an indirect module export with a wrapping call at the definition
+  //  - an indirect module export with a wrapping call at the export
   //
   // Return the configuration object or null.
-  findConfigurationObject(ast) {
+  findConfigurationObject(ast, allowWrappingCall = false) {
     // Try to find a default export
     var defaultExport = ast.body.find(node => node.type === 'ExportDefaultDeclaration')
 
@@ -64,21 +145,61 @@ class ConfigParser {
       return defaultExport.declaration
     }
 
+    // Direct default export with a wrapping call
+    else if (
+      allowWrappingCall &&
+      defaultExport &&
+      defaultExport.declaration.type === 'CallExpression' &&
+      defaultExport.declaration.arguments.length > 0 &&
+      defaultExport.declaration.arguments[0] &&
+      defaultExport.declaration.arguments[0].type === 'ObjectExpression'
+    ) {
+      core.info('Found configuration object in direct default export declaration with a wrapping call')
+      return defaultExport.declaration.arguments[0]
+    }
+
     // Indirect default export
     else if (defaultExport && defaultExport.declaration.type === 'Identifier') {
       const identifierName = defaultExport.declaration.name
-      const identifierDefinition = ast.body.find(
-        node =>
-          node.type === 'VariableDeclaration' &&
-          node.declarations.length == 1 &&
-          node.declarations[0].type === 'VariableDeclarator' &&
-          node.declarations[0].id.type === 'Identifier' &&
-          node.declarations[0].id.name === identifierName &&
-          node.declarations[0].init.type === 'ObjectExpression'
-      )
-      if (identifierDefinition) {
+      const identifierDeclarator = this.findTopLevelVariableDeclarator(ast, identifierName)
+      const identifierInitialization = identifierDeclarator && identifierDeclarator.init
+      if (identifierInitialization && identifierInitialization.type === 'ObjectExpression') {
         core.info('Found configuration object in indirect default export declaration')
-        return identifierDefinition.declarations[0].init
+        return identifierInitialization
+      }
+      // Indirect default export with a wrapping call at the definition
+      else if (
+        allowWrappingCall &&
+        identifierInitialization &&
+        identifierInitialization.type === 'CallExpression' &&
+        identifierInitialization.arguments.length > 0 &&
+        identifierInitialization.arguments[0] &&
+        identifierInitialization.arguments[0].type === 'ObjectExpression'
+      ) {
+        core.info(
+          'Found configuration object in indirect default export declaration with a wrapping call at the definition'
+        )
+        return identifierInitialization.arguments[0]
+      }
+    }
+
+    // Indirect default export with a wrapping call at the export
+    else if (
+      allowWrappingCall &&
+      defaultExport &&
+      defaultExport.declaration.type === 'CallExpression' &&
+      defaultExport.declaration.arguments.length > 0 &&
+      defaultExport.declaration.arguments[0] &&
+      defaultExport.declaration.arguments[0].type === 'Identifier'
+    ) {
+      const identifierName = defaultExport.declaration.arguments[0].name
+      const identifierDeclarator = this.findTopLevelVariableDeclarator(ast, identifierName)
+      const identifierInitialization = identifierDeclarator && identifierDeclarator.init
+      if (identifierInitialization && identifierInitialization.type === 'ObjectExpression') {
+        core.info(
+          'Found configuration object in indirect default export declaration with a wrapping call at the export'
+        )
+        return identifierInitialization
       }
     }
 
@@ -101,21 +222,57 @@ class ConfigParser {
       return moduleExport.expression.right
     }
 
+    // Direct default export with a wrapping call
+    else if (
+      allowWrappingCall &&
+      moduleExport &&
+      moduleExport.expression.right.type === 'CallExpression' &&
+      moduleExport.expression.right.arguments.length > 0 &&
+      moduleExport.expression.right.arguments[0] &&
+      moduleExport.expression.right.arguments[0].type === 'ObjectExpression'
+    ) {
+      core.info('Found configuration object in direct module export with a wrapping call')
+      return moduleExport.expression.right.arguments[0]
+    }
+
     // Indirect module export
     else if (moduleExport && moduleExport.expression.right.type === 'Identifier') {
       const identifierName = moduleExport && moduleExport.expression.right.name
-      const identifierDefinition = ast.body.find(
-        node =>
-          node.type === 'VariableDeclaration' &&
-          node.declarations.length == 1 &&
-          node.declarations[0].type === 'VariableDeclarator' &&
-          node.declarations[0].id.type === 'Identifier' &&
-          node.declarations[0].id.name === identifierName &&
-          node.declarations[0].init.type === 'ObjectExpression'
-      )
-      if (identifierDefinition) {
+      const identifierDeclarator = this.findTopLevelVariableDeclarator(ast, identifierName)
+      const identifierInitialization = identifierDeclarator && identifierDeclarator.init
+      if (identifierInitialization && identifierInitialization.type === 'ObjectExpression') {
         core.info('Found configuration object in indirect module export')
-        return identifierDefinition.declarations[0].init
+        return identifierInitialization
+      }
+      // Indirect module export with a wrapping call at the definition
+      else if (
+        allowWrappingCall &&
+        identifierInitialization &&
+        identifierInitialization.type === 'CallExpression' &&
+        identifierInitialization.arguments.length > 0 &&
+        identifierInitialization.arguments[0] &&
+        identifierInitialization.arguments[0].type === 'ObjectExpression'
+      ) {
+        core.info('Found configuration object in indirect module export with a wrapping call at the definition')
+        return identifierInitialization.arguments[0]
+      }
+    }
+
+    // Indirect module export with a wrapping call at the export
+    else if (
+      allowWrappingCall &&
+      moduleExport &&
+      moduleExport.expression.right.type === 'CallExpression' &&
+      moduleExport.expression.right.arguments.length > 0 &&
+      moduleExport.expression.right.arguments[0] &&
+      moduleExport.expression.right.arguments[0].type === 'Identifier'
+    ) {
+      const identifierName = moduleExport.expression.right.arguments[0].name
+      const identifierDeclarator = this.findTopLevelVariableDeclarator(ast, identifierName)
+      const identifierInitialization = identifierDeclarator && identifierDeclarator.init
+      if (identifierInitialization && identifierInitialization.type === 'ObjectExpression') {
+        core.info('Found configuration object in indirect module export declaration with a wrapping call at the export')
+        return identifierInitialization
       }
     }
 
@@ -179,7 +336,7 @@ class ConfigParser {
     const ast = espree.parse(this.configuration, espreeOptions)
 
     // Find the configuration object
-    var configurationObject = this.findConfigurationObject(ast)
+    var configurationObject = this.findConfigurationObject(ast, this.allowWrappingCall)
     if (!configurationObject) {
       throw 'Could not find a configuration object in the configuration file'
     }
