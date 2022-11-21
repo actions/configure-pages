@@ -260,11 +260,28 @@ class ConfigParser {
 
     // Indirect module export with a wrapping call at the export
     else if (
-      false
-      // ...
+      allowWrappingCall &&
+      moduleExport &&
+      moduleExport.expression.right.type === 'CallExpression' &&
+      moduleExport.expression.right.arguments.length > 0 &&
+      moduleExport.expression.right.arguments[0] &&
+      moduleExport.expression.right.arguments[0].type === 'Identifier'
     ) {
-      core.info('Found configuration object in indirect module export with a wrapping call at the export')
-      return defaultExport.declaration.arguments[0]
+      const identifierName = moduleExport.expression.right.arguments[0].name
+      const identifierDefinition = ast.body.find(
+        node =>
+          node.type === 'VariableDeclaration' &&
+          node.declarations.length == 1 &&
+          node.declarations[0].type === 'VariableDeclarator' &&
+          node.declarations[0].id.type === 'Identifier' &&
+          node.declarations[0].id.name === identifierName &&
+          node.declarations[0].init
+      )
+      const identifierInitialization = identifierDefinition && identifierDefinition.declarations[0].init
+      if (identifierInitialization && identifierInitialization.type === 'ObjectExpression') {
+        core.info('Found configuration object in indirect module export declaration with a wrapping call at the export')
+        return identifierInitialization
+      }
     }
 
     // No configuration object found
