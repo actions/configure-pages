@@ -2,6 +2,8 @@ const core = require('@actions/core')
 const { ConfigParser } = require('./config-parser')
 const removeTrailingSlash = require('./remove-trailing-slash')
 
+const SUPPORTED_FILE_EXTENSIONS = ['.js', '.cjs', '.mjs']
+
 // Return the settings to be passed to a {ConfigParser} for a given static site generator,
 // optional configuration file path, and a Pages siteUrl value to inject
 function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, siteUrl }) {
@@ -76,12 +78,12 @@ function setPagesConfig({ staticSiteGenerator, generatorConfigFile, siteUrl }) {
     const settings = getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, siteUrl })
     new ConfigParser(settings).injectAll()
   } catch (error) {
-    const supportedFileExtension = ['.js', '.cjs', '.mjs'].some(extension => generatorConfigFile.endsWith(extension))
+    const isSupportedFileExtension = SUPPORTED_FILE_EXTENSIONS.some(ext => generatorConfigFile.endsWith(ext))
 
     // Logging
-    if (!supportedFileExtension) {
+    if (!isSupportedFileExtension) {
       core.warning(
-        `We were unable to determine how to inject the site metadata into your config. Currently we only support ".js", ".cjs" and ".mjs".`,
+        `Unsupported configuration file extension. Currently supported extensions: ${SUPPORTED_FILE_EXTENSIONS.map(ext => JSON.stringify(ext)).join(', ')}`,
         error
       )
     } else {
