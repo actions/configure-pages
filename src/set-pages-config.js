@@ -83,7 +83,9 @@ function setPagesConfig({ staticSiteGenerator, generatorConfigFile, siteUrl }) {
     // Logging
     if (!isSupportedFileExtension) {
       core.warning(
-        `Unsupported configuration file extension. Currently supported extensions: ${SUPPORTED_FILE_EXTENSIONS.map(ext => JSON.stringify(ext)).join(', ')}`,
+        `Unsupported configuration file extension. Currently supported extensions: ${SUPPORTED_FILE_EXTENSIONS.map(
+          ext => JSON.stringify(ext)
+        ).join(', ')}`,
         error
       )
     } else {
