@@ -11,6 +11,11 @@ const tempFolder = getTempFolder()
 
 const SUPPORTED_GENERATORS = ['next', 'nuxt', 'gatsby', 'sveltekit']
 const SUPPORTED_FILE_EXTENSIONS = ['.js', '.cjs', '.mjs']
+const IS_BLANK_CONFIG_FILE_REGEX = new RegExp('^blank\\.(' + SUPPORTED_FILE_EXTENSIONS.map(ext => ext.slice(1)).join('|') + ')$')
+
+function isBlankConfigFileName(fileName) {
+  return IS_BLANK_CONFIG_FILE_REGEX.test(fileName)
+}
 
 // Test suite
 describe('configParser', () => {
@@ -44,7 +49,7 @@ describe('configParser', () => {
           // Copy the source fixture to a temp file
           const fixtureSourceFile = `${fixtureFolder}/${configurationFile}`
           const fixtureTargetFile = `${tempFolder}/${configurationFile}`
-          if (configurationFile !== 'blank.js') {
+          if (!isBlankConfigFileName(configurationFile)) {
             fs.copyFileSync(fixtureSourceFile, fixtureTargetFile)
           } else if (fs.existsSync(fixtureTargetFile)) {
             fs.rmSync(fixtureTargetFile)
@@ -77,7 +82,7 @@ describe('configParser', () => {
             // Copy the source fixture to a temp file
             const fixtureSourceFile = `${fixtureFolder}/${configurationFile}`
             const fixtureTargetFile = `${tempFolder}/${configurationFile}`
-            if (configurationFile !== 'blank.js') {
+            if (!isBlankConfigFileName(configurationFile)) {
               fs.copyFileSync(fixtureSourceFile, fixtureTargetFile)
             } else if (fs.existsSync(fixtureTargetFile)) {
               fs.rmSync(fixtureTargetFile)
