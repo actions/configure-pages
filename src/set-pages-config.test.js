@@ -11,7 +11,9 @@ const tempFolder = getTempFolder()
 
 const SUPPORTED_GENERATORS = ['next', 'nuxt', 'gatsby', 'sveltekit', 'astro']
 const SUPPORTED_FILE_EXTENSIONS = ['.js', '.cjs', '.mjs']
-const IS_BLANK_CONFIG_FILE_REGEX = new RegExp('^blank\\.(' + SUPPORTED_FILE_EXTENSIONS.map(ext => ext.slice(1)).join('|') + ')$')
+const IS_BLANK_CONFIG_FILE_REGEX = new RegExp(
+  '^blank\\.(' + SUPPORTED_FILE_EXTENSIONS.map(ext => ext.slice(1)).join('|') + ')$'
+)
 
 function isBlankConfigFileName(fileName) {
   return IS_BLANK_CONFIG_FILE_REGEX.test(fileName)
