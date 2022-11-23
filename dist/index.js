@@ -15772,6 +15772,8 @@ const core = __nccwpck_require__(2186)
 const { ConfigParser } = __nccwpck_require__(8395)
 const removeTrailingSlash = __nccwpck_require__(9255)
 
+const SUPPORTED_FILE_EXTENSIONS = ['.js', '.cjs', '.mjs']
+
 // Return the settings to be passed to a {ConfigParser} for a given static site generator,
 // optional configuration file path, and a Pages siteUrl value to inject
 function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, siteUrl }) {
@@ -15846,11 +15848,22 @@ function setPagesConfig({ staticSiteGenerator, generatorConfigFile, siteUrl }) {
     const settings = getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, siteUrl })
     new ConfigParser(settings).injectAll()
   } catch (error) {
+    const isSupportedFileExtension = SUPPORTED_FILE_EXTENSIONS.some(ext => generatorConfigFile.endsWith(ext))
+
     // Logging
-    core.warning(
-      `We were unable to determine how to inject the site metadata into your config. Generated URLs may be incorrect. The base URL for this site should be ${siteUrl}. Please ensure your framework is configured to generate relative links appropriately.`,
-      error
-    )
+    if (!isSupportedFileExtension) {
+      core.warning(
+        `Unsupported configuration file extension. Currently supported extensions: ${SUPPORTED_FILE_EXTENSIONS.map(
+          ext => JSON.stringify(ext)
+        ).join(', ')}`,
+        error
+      )
+    } else {
+      core.warning(
+        `We were unable to determine how to inject the site metadata into your config. Generated URLs may be incorrect. The base URL for this site should be ${siteUrl}. Please ensure your framework is configured to generate relative links appropriately.`,
+        error
+      )
+    }
   }
 }
 
