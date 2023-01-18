@@ -16,8 +16,8 @@ inputs:
     default: ${{ github.token }}
     required: true
   enablement:
-    description: 'Should a Pages site be enabled for the repository if not so already?'
-    default: 'true'
+    description: 'Should a Pages site be enabled for the repository if not so already? This will only work with user-to-server tokens.'
+    default: 'false'
     required: false
 outputs:
   base_url:
