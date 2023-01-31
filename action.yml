@@ -16,7 +16,7 @@ inputs:
     default: ${{ github.token }}
     required: true
   enablement:
-    description: 'Should a Pages site be enabled for the repository if not so already? This will only work with user-to-server tokens.'
+    description: 'Should a Pages site be enabled for the repository if not so already? This will only work for user-to-server tokens, or server-to-server tokens with both the `pages: write` and `administration: write` permissions granted.'
     default: 'false'
     required: false
 outputs:
