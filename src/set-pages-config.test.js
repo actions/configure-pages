@@ -2,8 +2,7 @@ const fs = require('fs')
 const path = require('path')
 const core = require('@actions/core')
 
-const { getConfigParserSettings } = require('./set-pages-config')
-const { ConfigParser } = require('./config-parser')
+const { setPagesConfig } = require('./set-pages-config')
 const { getTempFolder, compareFiles } = require('./test-helpers')
 
 // Get the temp folder
@@ -57,12 +56,12 @@ describe('configParser', () => {
             fs.rmSync(fixtureTargetFile)
           }
 
-          // Get settings for the static site generator
-          const settings = getConfigParserSettings({ staticSiteGenerator, siteUrl })
-          // Update the settings
-          settings.configurationFile = fixtureTargetFile
-          // Do the injection
-          new ConfigParser(settings).injectAll()
+          // Do the injections for the static site generator
+          setPagesConfig({
+            staticSiteGenerator,
+            generatorConfigFile: fixtureTargetFile,
+            siteUrl
+          })
 
           // Read the expected file
           const expectedFile = `${fixtureFolder}/${path.basename(
@@ -71,7 +70,7 @@ describe('configParser', () => {
           )}.expected${defaultFileExtension}`
 
           // Compare the actual and expected files
-          compareFiles(settings.configurationFile, expectedFile)
+          compareFiles(fixtureTargetFile, expectedFile)
         })
       })
 
@@ -90,15 +89,12 @@ describe('configParser', () => {
               fs.rmSync(fixtureTargetFile)
             }
 
-            // Get settings for the static site generator
-            const settings = getConfigParserSettings({
+            // Do the injections for the static site generator
+            setPagesConfig({
               staticSiteGenerator,
               generatorConfigFile: fixtureTargetFile,
               siteUrl
             })
-
-            // Do the injection
-            new ConfigParser(settings).injectAll()
 
             // Read the expected file
             const expectedFile = `${fixtureFolder}/${path.basename(
@@ -107,7 +103,7 @@ describe('configParser', () => {
             )}.expected${fileExtension}`
 
             // Compare the actual and expected files
-            compareFiles(settings.configurationFile, expectedFile)
+            compareFiles(fixtureTargetFile, expectedFile)
           })
         })
     })
