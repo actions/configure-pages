@@ -19406,7 +19406,7 @@ async function main() {
   try {
     const { repositoryNwo, githubToken, enablement, staticSiteGenerator, generatorConfigFile, proxy } = getContext()
 
-    const pageObject = await findOrCreatePagesSite({ repositoryNwo, githubToken, enablement })
+    const pageObject = await findOrCreatePagesSite({ repositoryNwo, githubToken, enablement, proxy })
     const siteUrl = new URL(pageObject.html_url)
 
     if (staticSiteGenerator) {
