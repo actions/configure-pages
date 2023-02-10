@@ -35,15 +35,17 @@ async function enablePagesSite({ repositoryNwo, githubToken, proxy }) {
 }
 
 async function getPagesSite({ repositoryNwo, githubToken, proxy }) {
+  console.log('Using proxy:', proxy)
   const pagesEndpoint = `${getApiBaseUrl()}/repos/${repositoryNwo}/pages`
-
-  const response = await axios.get(pagesEndpoint, {
-    ...(proxy ? {httpsAgent: HPA(proxy)} : {}),
+  const config = {
+    ...(proxy ? { httpsAgent: HPA(proxy) } : {}),
     headers: {
       Accept: 'application/vnd.github.v3+json',
       Authorization: `Bearer ${githubToken}`
     }
-  })
+  }
+
+  const response = await axios.get(pagesEndpoint, config)
 
   const pageObject = response.data
   return pageObject
