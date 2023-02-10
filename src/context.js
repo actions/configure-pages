@@ -7,7 +7,6 @@ function getRequiredVars() {
     githubToken: core.getInput('token'),
     staticSiteGenerator: core.getInput('static_site_generator'),
     generatorConfigFile: core.getInput('generator_config_file'),
-    proxy: core.getInput('proxy'),
     enablement: core.getInput('enablement') === 'true'
   }
 }

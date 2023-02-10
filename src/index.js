@@ -9,9 +9,9 @@ const outputPagesBaseUrl = require('./output-pages-base-url')
 
 async function main() {
   try {
-    const { repositoryNwo, githubToken, enablement, staticSiteGenerator, generatorConfigFile, proxy } = getContext()
+    const { githubToken, enablement, staticSiteGenerator, generatorConfigFile } = getContext()
 
-    const pageObject = await findOrCreatePagesSite({ repositoryNwo, githubToken, enablement, proxy })
+    const pageObject = await findOrCreatePagesSite({ githubToken, enablement })
     const siteUrl = new URL(pageObject.html_url)
 
     if (staticSiteGenerator) {

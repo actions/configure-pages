@@ -1,28 +1,18 @@
-const axios = require('axios')
 const core = require('@actions/core')
 const github = require('@actions/github')
-const HPA = require('https-proxy-agent')
 
 function getApiBaseUrl() {
   return process.env.GITHUB_API_URL || 'https://api.github.com'
 }
 
-async function enablePagesSite({ repositoryNwo, githubToken, proxy }) {
-  const pagesEndpoint = `${getApiBaseUrl()}/repos/${repositoryNwo}/pages`
+async function enablePagesSite({ githubToken }) {
+  const octokit = github.getOctokit(githubToken)
 
   try {
-    const response = await axios.post(
-      pagesEndpoint,
-      { build_type: 'workflow' },
-      {
-        ...(proxy ? {httpsAgent: HPA(proxy)} : {}),
-        headers: {
-          Accept: 'application/vnd.github.v3+json',
-          Authorization: `Bearer ${githubToken}`,
-          'Content-type': 'application/json'
-        }
-      }
-    )
+    const response = await octokit.rest.repos.createPagesSite({
+      owner: github.context.repo.owner,
+      repo: github.context.repo.repo
+    })
 
     const pageObject = response.data
     return pageObject
@@ -35,28 +25,24 @@ async function enablePagesSite({ repositoryNwo, githubToken, proxy }) {
   }
 }
 
-async function getPagesSite({ repositoryNwo, githubToken, proxy }) {
-  console.log('Using proxy:', proxy)
-  const octokitOptions = proxy ? { request: { agent: HPA(proxy)}} : {}
-  const octokit = github.getOctokit(githubToken, octokitOptions)
+async function getPagesSite({ githubToken }) {
+  const octokit = github.getOctokit(githubToken)
 
   const response = await octokit.rest.repos.getPages({
     owner: github.context.repo.owner,
     repo: github.context.repo.repo
   })
 
-  console.log(response)
-
   const pageObject = response.data
   return pageObject
 }
 
-async function findOrCreatePagesSite({ repositoryNwo, githubToken, enablement = true, proxy }) {
+async function findOrCreatePagesSite({ githubToken, enablement = true }) {
   let pageObject
 
   // Try to find an existing Pages site first
   try {
-    pageObject = await getPagesSite({ repositoryNwo, githubToken, proxy })
+    pageObject = await getPagesSite({ githubToken })
   } catch (error) {
     if (!enablement) {
       core.error('Get Pages site failed', error)
@@ -68,7 +54,7 @@ async function findOrCreatePagesSite({ repositoryNwo, githubToken, enablement = 
   if (!pageObject && enablement) {
     // Create a new Pages site if one doesn't exist
     try {
-      pageObject = await enablePagesSite({ repositoryNwo, githubToken, proxy })
+      pageObject = await enablePagesSite({ githubToken })
     } catch (error) {
       core.error('Create Pages site failed', error)
       throw error
@@ -78,7 +64,7 @@ async function findOrCreatePagesSite({ repositoryNwo, githubToken, enablement = 
     // Try one more time for this extreme edge case!
     if (pageObject == null) {
       try {
-        pageObject = await getPagesSite({ repositoryNwo, githubToken })
+        pageObject = await getPagesSite({ githubToken })
       } catch (error) {
         core.error('Get Pages site still failed', error)
         throw error
