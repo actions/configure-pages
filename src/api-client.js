@@ -1,11 +1,12 @@
 const axios = require('axios')
 const core = require('@actions/core')
+const HPA = require('https-proxy-agent')
 
 function getApiBaseUrl() {
   return process.env.GITHUB_API_URL || 'https://api.github.com'
 }
 
-async function enablePagesSite({ repositoryNwo, githubToken }) {
+async function enablePagesSite({ repositoryNwo, githubToken, proxy }) {
   const pagesEndpoint = `${getApiBaseUrl()}/repos/${repositoryNwo}/pages`
 
   try {
@@ -13,6 +14,7 @@ async function enablePagesSite({ repositoryNwo, githubToken }) {
       pagesEndpoint,
       { build_type: 'workflow' },
       {
+        ...(proxy ? {httpsAgent: HPA(proxy)} : {}),
         headers: {
           Accept: 'application/vnd.github.v3+json',
           Authorization: `Bearer ${githubToken}`,
@@ -32,10 +34,11 @@ async function enablePagesSite({ repositoryNwo, githubToken }) {
   }
 }
 
-async function getPagesSite({ repositoryNwo, githubToken }) {
+async function getPagesSite({ repositoryNwo, githubToken, proxy }) {
   const pagesEndpoint = `${getApiBaseUrl()}/repos/${repositoryNwo}/pages`
 
   const response = await axios.get(pagesEndpoint, {
+    ...(proxy ? {httpsAgent: HPA(proxy)} : {}),
     headers: {
       Accept: 'application/vnd.github.v3+json',
       Authorization: `Bearer ${githubToken}`
