@@ -1,5 +1,6 @@
 const axios = require('axios')
 const core = require('@actions/core')
+const github = require('@actions/github')
 const HPA = require('https-proxy-agent')
 
 function getApiBaseUrl() {
@@ -36,16 +37,15 @@ async function enablePagesSite({ repositoryNwo, githubToken, proxy }) {
 
 async function getPagesSite({ repositoryNwo, githubToken, proxy }) {
   console.log('Using proxy:', proxy)
-  const pagesEndpoint = `${getApiBaseUrl()}/repos/${repositoryNwo}/pages`
-  const config = {
-    ...(proxy ? { httpsAgent: HPA(proxy) } : {}),
-    headers: {
-      Accept: 'application/vnd.github.v3+json',
-      Authorization: `Bearer ${githubToken}`
-    }
-  }
+  const octokitOptions = proxy ? { request: { agent: HPA(proxy)}} : {}
+  const octokit = github.getOctokit(githubToken, octokitOptions)
 
-  const response = await axios.get(pagesEndpoint, config)
+  const response = await octokit.rest.repos.getPages({
+    owner: github.context.repo.owner,
+    repo: github.context.repo.repo
+  })
+
+  console.log(response)
 
   const pageObject = response.data
   return pageObject
