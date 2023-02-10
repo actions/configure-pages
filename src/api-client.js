@@ -49,12 +49,12 @@ async function getPagesSite({ repositoryNwo, githubToken, proxy }) {
   return pageObject
 }
 
-async function findOrCreatePagesSite({ repositoryNwo, githubToken, enablement = true }) {
+async function findOrCreatePagesSite({ repositoryNwo, githubToken, enablement = true, proxy }) {
   let pageObject
 
   // Try to find an existing Pages site first
   try {
-    pageObject = await getPagesSite({ repositoryNwo, githubToken })
+    pageObject = await getPagesSite({ repositoryNwo, githubToken, proxy })
   } catch (error) {
     if (!enablement) {
       core.error('Get Pages site failed', error)
@@ -66,7 +66,7 @@ async function findOrCreatePagesSite({ repositoryNwo, githubToken, enablement = 
   if (!pageObject && enablement) {
     // Create a new Pages site if one doesn't exist
     try {
-      pageObject = await enablePagesSite({ repositoryNwo, githubToken })
+      pageObject = await enablePagesSite({ repositoryNwo, githubToken, proxy })
     } catch (error) {
       core.error('Create Pages site failed', error)
       throw error
