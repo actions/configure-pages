@@ -12,10 +12,12 @@ jest.mock('@actions/github', () => ({
     }
   },
   getOctokit: () => ({
-    rest: { repos: {
-      getPages: mockGetPages,
-      createPagesSite: mockCreatePagesSite
-    }}
+    rest: {
+      repos: {
+        getPages: mockGetPages,
+        createPagesSite: mockCreatePagesSite
+      }
+    }
   })
 }))
 
