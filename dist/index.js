@@ -15978,7 +15978,8 @@ async function enablePagesSite({ githubToken }) {
   try {
     const response = await octokit.rest.repos.createPagesSite({
       owner: github.context.repo.owner,
-      repo: github.context.repo.repo
+      repo: github.context.repo.repo,
+      build_type: 'workflow'
     })
 
     const pageObject = response.data
@@ -16498,7 +16499,6 @@ const core = __nccwpck_require__(2186)
 // Load variables from Actions runtime
 function getRequiredVars() {
   return {
-    repositoryNwo: process.env.GITHUB_REPOSITORY,
     githubToken: core.getInput('token'),
     staticSiteGenerator: core.getInput('static_site_generator'),
     generatorConfigFile: core.getInput('generator_config_file'),
