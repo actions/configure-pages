@@ -3,7 +3,6 @@ const core = require('@actions/core')
 // Load variables from Actions runtime
 function getRequiredVars() {
   return {
-    repositoryNwo: process.env.GITHUB_REPOSITORY,
     githubToken: core.getInput('token'),
     staticSiteGenerator: core.getInput('static_site_generator'),
     generatorConfigFile: core.getInput('generator_config_file'),
