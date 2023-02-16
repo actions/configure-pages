@@ -7,7 +7,8 @@ async function enablePagesSite({ githubToken }) {
   try {
     const response = await octokit.rest.repos.createPagesSite({
       owner: github.context.repo.owner,
-      repo: github.context.repo.repo
+      repo: github.context.repo.repo,
+      build_type: 'workflow'
     })
 
     const pageObject = response.data
