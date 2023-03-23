@@ -30,7 +30,7 @@ function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, sit
         properties: {
            // Disable ssr
            ssr: false,
-          //set cdnURL and baseURL to be used for pathing
+          //configure baseURL cdnURL and paths
           'app.baseURL': path,
           'app.cdnURL': origin
           
