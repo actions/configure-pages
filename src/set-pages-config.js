@@ -2,7 +2,7 @@ const core = require('@actions/core')
 const { ConfigParser } = require('./config-parser')
 const removeTrailingSlash = require('./remove-trailing-slash')
 
-const SUPPORTED_FILE_EXTENSIONS = ['.js', '.cjs', '.mjs', '.ts']
+const SUPPORTED_FILE_EXTENSIONS = ['.ts', '.js', '.cjs', '.mjs']
 
 // Return the settings to be passed to a {ConfigParser} for a given static site generator,
 // optional configuration file path, and a Pages siteUrl value to inject
@@ -25,8 +25,8 @@ function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, sit
       }
     case 'nuxt3':
       return {
-        configurationFile: generatorConfigFile || './nuxt.config.ts',
-        blankConfigurationFile: `${__dirname}/blank-configurations/nuxt3.ts`,
+        configurationFile: generatorConfigFile || './nuxt.config.js',
+        blankConfigurationFile: `${__dirname}/blank-configurations/nuxt3.js`,
         properties: {
           // Disable ssr
           ssr: false,
