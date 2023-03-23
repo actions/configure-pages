@@ -8,6 +8,7 @@ const SUPPORTED_FILE_EXTENSIONS = ['.ts', '.js', '.cjs', '.mjs']
 // optional configuration file path, and a Pages siteUrl value to inject
 function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, siteUrl }) {
   let { pathname: path, origin } = siteUrl
+  core.warning(`Handed ${staticSiteGenerator}`)
 
   switch (staticSiteGenerator) {
     case 'nuxt':
