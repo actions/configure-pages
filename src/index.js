@@ -12,7 +12,6 @@ async function main() {
     const { githubToken, enablement, staticSiteGenerator, generatorConfigFile } = getContext()
     const pageObject = await findOrCreatePagesSite({ githubToken, enablement })
     const siteUrl = new URL(pageObject.html_url)
-    core.debug('Site url:' + siteUrl + "or " + pageObject.html_url + " : " + pageObject.url )
     if (staticSiteGenerator) {
       setPagesConfig({ staticSiteGenerator, generatorConfigFile, siteUrl })
     }

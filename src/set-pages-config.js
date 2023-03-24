@@ -2,13 +2,12 @@ const core = require('@actions/core')
 const { ConfigParser } = require('./config-parser')
 const removeTrailingSlash = require('./remove-trailing-slash')
 
-const SUPPORTED_FILE_EXTENSIONS = ['.js', '.cjs', '.mjs', '.ts']
+const SUPPORTED_FILE_EXTENSIONS = ['.js', '.cjs', '.mjs']
 
 // Return the settings to be passed to a {ConfigParser} for a given static site generator,
 // optional configuration file path, and a Pages siteUrl value to inject
 function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, siteUrl }) {
   let { pathname: path, origin } = siteUrl
-  core.warning(`Handed ${staticSiteGenerator}`)
 
   switch (staticSiteGenerator) {
     case 'nuxt':
@@ -33,10 +32,8 @@ function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, sit
           // Disable ssr
           ssr: false,
           //configure baseURL cdnURL and paths
-          'app': {
-            'baseURL': path,
-            'cdnURL': origin
-          }
+          'app.baseURL': path,
+          'app.cdnURL': origin
         }
       }
     case 'next':
@@ -101,7 +98,7 @@ function setPagesConfig({ staticSiteGenerator, generatorConfigFile, siteUrl }) {
       core.warning(
         `Unsupported configuration file extension. Currently supported extensions: ${SUPPORTED_FILE_EXTENSIONS.map(
           ext => JSON.stringify(ext)
-        ).join(', ')} recieved: something`,
+        ).join(', ')}`,
         error
       )
     } else {
