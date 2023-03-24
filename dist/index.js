@@ -16562,7 +16562,7 @@ const core = __nccwpck_require__(2186)
 const { ConfigParser } = __nccwpck_require__(8395)
 const removeTrailingSlash = __nccwpck_require__(9255)
 
-const SUPPORTED_FILE_EXTENSIONS = ['.js', '.cjs', '.mjs']
+const SUPPORTED_FILE_EXTENSIONS = ['.js', '.cjs', '.mjs', 'ts']
 
 // Return the settings to be passed to a {ConfigParser} for a given static site generator,
 // optional configuration file path, and a Pages siteUrl value to inject
@@ -16645,7 +16645,7 @@ function setPagesConfig({ staticSiteGenerator, generatorConfigFile, siteUrl }) {
       core.warning(
         `Unsupported configuration file extension. Currently supported extensions: ${SUPPORTED_FILE_EXTENSIONS.map(
           ext => JSON.stringify(ext)
-        ).join(', ')} recieved: ${{staticSiteGenerator}}`,
+        ).join(', ')} recieved: in Index`,
         error
       )
     } else {
