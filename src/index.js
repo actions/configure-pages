@@ -13,7 +13,7 @@ async function main() {
 
     const pageObject = await findOrCreatePagesSite({ githubToken, enablement })
     const siteUrl = new URL(pageObject.html_url)
-
+    core.warning(`url: ${siteUrl}`)
     if (staticSiteGenerator) {
       setPagesConfig({ staticSiteGenerator, generatorConfigFile, siteUrl })
     }
