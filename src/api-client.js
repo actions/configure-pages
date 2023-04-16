@@ -43,8 +43,7 @@ async function findOrCreatePagesSite({ githubToken, enablement = true }) {
   } catch (error) {
     if (!enablement) {
       core.error(
-        'Get Pages site failed. Make sure a version of your website is already deployed'
-        + ' on GitHub Pages, or consider setting `enablemet: true` for this action',
+        'Get Pages site failed. Please verify that the repository has Pages enabled and configured to build using GitHub Actions, or consider exploring the `enablement` parameter for this action.',
         error
       )
       throw error
