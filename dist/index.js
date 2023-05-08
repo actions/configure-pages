@@ -16802,7 +16802,7 @@ module.exports = require("zlib");
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 
 /**
- * @typedef {import('./index.js').VisitorKeys} VisitorKeys
+ * @typedef {{ readonly [type: string]: ReadonlyArray<string> }} VisitorKeys
  */
 
 /**
@@ -17121,7 +17121,7 @@ Object.freeze(KEYS);
  */
 
 /**
- * @typedef {{ readonly [type: string]: ReadonlyArray<string> }} VisitorKeys
+ * @typedef {import('./visitor-keys.js').VisitorKeys} VisitorKeys
  */
 
 // List to ignore keys.
@@ -17951,7 +17951,7 @@ var espree = () => Parser => {
     };
 };
 
-const version$1 = "9.5.1";
+const version$1 = "9.5.2";
 
 /**
  * @fileoverview Main Espree file that converts Acorn into Esprima output.
