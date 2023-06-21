@@ -27,6 +27,7 @@ function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, sit
       return {
         configurationFile: generatorConfigFile || './nuxt.config.ts',
         blankConfigurationFile: `${__dirname}/blank-configurations/nuxt3.ts`,
+        allowWrappingCall: true,
         properties: {
           // Configure a base path of the app
           'app.baseURL': path,
