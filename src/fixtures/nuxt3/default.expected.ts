@@ -1,5 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+  ssr: false,
   app: {
     baseURL: '/docs/' ,
     head: {
@@ -16,7 +17,6 @@ export default defineNuxtConfig({
       link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }]
     }
   },
-  ssr: false,
   css: [],
   plugins: [],
   components: true,

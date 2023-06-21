@@ -1,3 +1,4 @@
+// https://nuxt.com/docs/api/configuration/nuxt-config
 const getAllDynamicRoute = async function () {
   const routes = await (async () => {
     return ['/posts/hello-world', '/posts/hello-again']
@@ -6,11 +7,9 @@ const getAllDynamicRoute = async function () {
 }
 
 export default defineNuxtConfig({
-  app: {
-    baseURL: '/docs/' 
-  },
+  ssr: false,
+  app: { baseURL: '/docs/' },
   generate: {
     routes: await getAllDynamicRoute()
   },
-  ssr: false
 })
