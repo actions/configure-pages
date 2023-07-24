@@ -34,6 +34,10 @@ function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, sit
           // Configure a base path
           basePath: path,
 
+          // Set the target to static too
+          // https://nextjs.org/docs/advanced-features/static-html-export
+          output: 'export',
+
           // Disable server side image optimization too
           // https://nextjs.org/docs/api-reference/next/image#unoptimized
           'experimental.images.unoptimized': true,
