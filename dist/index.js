@@ -18202,6 +18202,7 @@ async function main() {
     }
     outputPagesBaseUrl(siteUrl)
     core.exportVariable('GITHUB_PAGES', 'true')
+    core.exportVariable('BASE_URL', siteUrl)
   } catch (error) {
     core.setFailed(error)
     process.exit(1)
