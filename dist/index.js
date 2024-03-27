@@ -16990,13 +16990,16 @@ function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, sit
         configurationFile: generatorConfigFile || './next.config.js',
         blankConfigurationFile: __nccwpck_require__.ab + "next.js",
         properties: {
+          // Static export
+          // https://nextjs.org/docs/app/building-your-application/deploying/static-exports#version-history
+          output: 'export',
+
           // Configure a base path
+          // https://nextjs.org/docs/app/api-reference/next-config-js/basePath
           basePath: path,
 
           // Disable server side image optimization too
           // https://nextjs.org/docs/api-reference/next/image#unoptimized
-          'experimental.images.unoptimized': true,
-          // No longer experimental as of Next.js v12.3.0
           'images.unoptimized': true
         }
       }
