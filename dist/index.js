@@ -35742,6 +35742,7 @@ function wrappy (fn, cb) {
 
 const core = __nccwpck_require__(2186)
 const github = __nccwpck_require__(5438)
+const { convertErrorToAnnotationProperties } = __nccwpck_require__(1507)
 
 async function enablePagesSite({ githubToken }) {
   const octokit = github.getOctokit(githubToken)
@@ -35785,12 +35786,12 @@ async function findOrCreatePagesSite({ githubToken, enablement = true }) {
   } catch (error) {
     if (!enablement) {
       core.error(
-        'Get Pages site failed. Please verify that the repository has Pages enabled and configured to build using GitHub Actions, or consider exploring the `enablement` parameter for this action.',
-        error
+        `Get Pages site failed. Please verify that the repository has Pages enabled and configured to build using GitHub Actions, or consider exploring the \`enablement\` parameter for this action. Error: ${error.message}`,
+        convertErrorToAnnotationProperties(error)
       )
       throw error
     }
-    core.warning('Get Pages site failed', error)
+    core.warning(`Get Pages site failed. Error: ${error.message}`, convertErrorToAnnotationProperties(error))
   }
 
   if (!pageObject && enablement) {
@@ -35798,7 +35799,7 @@ async function findOrCreatePagesSite({ githubToken, enablement = true }) {
     try {
       pageObject = await enablePagesSite({ githubToken })
     } catch (error) {
-      core.error('Create Pages site failed', error)
+      core.error(`Create Pages site failed. Error: ${error.message}`, convertErrorToAnnotationProperties(error))
       throw error
     }
 
@@ -35808,7 +35809,7 @@ async function findOrCreatePagesSite({ githubToken, enablement = true }) {
       try {
         pageObject = await getPagesSite({ githubToken })
       } catch (error) {
-        core.error('Get Pages site still failed', error)
+        core.error(`Get Pages site still failed. Error: ${error.message}`, convertErrorToAnnotationProperties(error))
         throw error
       }
     }
@@ -36297,6 +36298,37 @@ module.exports = { getContext }
 
 /***/ }),
 
+/***/ 1507:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+const ErrorStackParser = __nccwpck_require__(8057)
+
+// Convert an Error's stack into `@actions/core` toolkit AnnotationProperties:
+// https://github.com/actions/toolkit/blob/ef77c9d60bdb03700d7758b0d04b88446e72a896/packages/core/src/core.ts#L36-L71
+function convertErrorToAnnotationProperties(error, title = error.name) {
+  if (!(error instanceof Error)) {
+    throw new TypeError('error must be an instance of Error')
+  }
+
+  const stack = ErrorStackParser.parse(error)
+  const firstFrame = stack && stack.length > 0 ? stack[0] : null
+  if (!firstFrame) {
+    throw new Error('Error stack is empty or unparseable')
+  }
+
+  return {
+    title,
+    file: firstFrame.fileName,
+    startLine: firstFrame.lineNumber,
+    startColumn: firstFrame.columnNumber
+  }
+}
+
+module.exports = { convertErrorToAnnotationProperties }
+
+
+/***/ }),
+
 /***/ 7527:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -36335,6 +36367,7 @@ module.exports = function removeTrailingSlash(str) {
 const core = __nccwpck_require__(2186)
 const { ConfigParser } = __nccwpck_require__(8395)
 const removeTrailingSlash = __nccwpck_require__(9255)
+const { convertErrorToAnnotationProperties } = __nccwpck_require__(1507)
 
 const SUPPORTED_FILE_EXTENSIONS = ['.js', '.cjs', '.mjs']
 
@@ -36422,19 +36455,27 @@ function setPagesConfig({ staticSiteGenerator, generatorConfigFile, siteUrl }) {
       core.warning(
         `Unsupported configuration file extension. Currently supported extensions: ${SUPPORTED_FILE_EXTENSIONS.map(
           ext => JSON.stringify(ext)
-        ).join(', ')}`,
-        error
+        ).join(', ')}. Error: ${error.message}`,
+        convertErrorToAnnotationProperties(error)
       )
     } else {
       core.warning(
-        `We were unable to determine how to inject the site metadata into your config. Generated URLs may be incorrect. The base URL for this site should be ${siteUrl}. Please ensure your framework is configured to generate relative links appropriately.`,
-        error
+        `We were unable to determine how to inject the site metadata into your config. Generated URLs may be incorrect. The base URL for this site should be ${siteUrl}. Please ensure your framework is configured to generate relative links appropriately. Error: ${error.message}`,
+        convertErrorToAnnotationProperties(error)
       )
     }
   }
 }
 
 module.exports = { getConfigParserSettings, setPagesConfig }
+
+
+/***/ }),
+
+/***/ 8057:
+/***/ ((module) => {
+
+module.exports = eval("require")("error-stack-parser");
 
 
 /***/ }),
