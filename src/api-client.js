@@ -49,20 +49,15 @@ async function findOrCreatePagesSite({ githubToken, enablement = true }) {
       )
       throw error
     }
-    core.warning(
-      `Get Pages site failed. Error: ${error.message}`,
-      convertErrorToAnnotationProperties(error)
-    )
+    core.warning(`Get Pages site failed. Error: ${error.message}`, convertErrorToAnnotationProperties(error))
+  }
 
   if (!pageObject && enablement) {
     // Create a new Pages site if one doesn't exist
     try {
       pageObject = await enablePagesSite({ githubToken })
     } catch (error) {
-      core.error(
-        `Create Pages site failed. Error: ${error.message}`,
-        convertErrorToAnnotationProperties(error)
-      )
+      core.error(`Create Pages site failed. Error: ${error.message}`, convertErrorToAnnotationProperties(error))
       throw error
     }
 
@@ -72,10 +67,7 @@ async function findOrCreatePagesSite({ githubToken, enablement = true }) {
       try {
         pageObject = await getPagesSite({ githubToken })
       } catch (error) {
-        core.error(
-          `Get Pages site still failed. Error: ${error.message}`,
-          convertErrorToAnnotationProperties(error)
-        )
+        core.error(`Get Pages site still failed. Error: ${error.message}`, convertErrorToAnnotationProperties(error))
         throw error
       }
     }
