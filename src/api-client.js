@@ -1,5 +1,6 @@
 const core = require('@actions/core')
 const github = require('@actions/github')
+const { convertErrorToAnnotationProperties } = require('./error-utils')
 
 async function enablePagesSite({ githubToken }) {
   const octokit = github.getOctokit(githubToken)
@@ -43,12 +44,12 @@ async function findOrCreatePagesSite({ githubToken, enablement = true }) {
   } catch (error) {
     if (!enablement) {
       core.error(
-        'Get Pages site failed. Please verify that the repository has Pages enabled and configured to build using GitHub Actions, or consider exploring the `enablement` parameter for this action.',
-        error
+        `Get Pages site failed. Please verify that the repository has Pages enabled and configured to build using GitHub Actions, or consider exploring the \`enablement\` parameter for this action. Error: ${error.message}`,
+        convertErrorToAnnotationProperties(error)
       )
       throw error
     }
-    core.warning('Get Pages site failed', error)
+    core.warning(`Get Pages site failed. Error: ${error.message}`, convertErrorToAnnotationProperties(error))
   }
 
   if (!pageObject && enablement) {
@@ -56,7 +57,7 @@ async function findOrCreatePagesSite({ githubToken, enablement = true }) {
     try {
       pageObject = await enablePagesSite({ githubToken })
     } catch (error) {
-      core.error('Create Pages site failed', error)
+      core.error(`Create Pages site failed. Error: ${error.message}`, convertErrorToAnnotationProperties(error))
       throw error
     }
 
@@ -66,7 +67,7 @@ async function findOrCreatePagesSite({ githubToken, enablement = true }) {
       try {
         pageObject = await getPagesSite({ githubToken })
       } catch (error) {
-        core.error('Get Pages site still failed', error)
+        core.error(`Get Pages site still failed. Error: ${error.message}`, convertErrorToAnnotationProperties(error))
         throw error
       }
     }

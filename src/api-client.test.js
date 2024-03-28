@@ -1,8 +1,23 @@
 const core = require('@actions/core')
 const apiClient = require('./api-client')
+const { RequestError } = require('@octokit/request-error')
 
 const mockGetPages = jest.fn()
 const mockCreatePagesSite = jest.fn()
+
+const generateRequestError = statusCode => {
+  const fakeRequest = { headers: {}, url: '/' }
+  const fakeResponse = { status: statusCode }
+  let message = 'Oops'
+  if (statusCode === 404) {
+    message = 'Not Found'
+  }
+  if (statusCode === 409) {
+    message = 'Too Busy'
+  }
+  const error = new RequestError(message, statusCode, { request: fakeRequest, response: fakeResponse })
+  return error
+}
 
 jest.mock('@actions/github', () => ({
   context: {
@@ -48,7 +63,7 @@ describe('apiClient', () => {
     })
 
     it('handles a 409 response when the page already exists', async () => {
-      mockCreatePagesSite.mockImplementationOnce(() => Promise.reject({ response: { status: 409 } }))
+      mockCreatePagesSite.mockImplementationOnce(() => Promise.reject(generateRequestError(409)))
 
       // Simply assert that no error is raised
       const result = await apiClient.enablePagesSite({
@@ -59,7 +74,7 @@ describe('apiClient', () => {
     })
 
     it('re-raises errors on failure status codes', async () => {
-      mockCreatePagesSite.mockImplementationOnce(() => Promise.reject({ response: { status: 404 } }))
+      mockCreatePagesSite.mockImplementationOnce(() => Promise.reject(generateRequestError(404)))
 
       let erred = false
       try {
@@ -86,7 +101,7 @@ describe('apiClient', () => {
     })
 
     it('re-raises errors on failure status codes', async () => {
-      mockGetPages.mockImplementationOnce(() => Promise.reject({ response: { status: 404 } }))
+      mockGetPages.mockImplementationOnce(() => Promise.reject(generateRequestError(404)))
 
       let erred = false
       try {
@@ -105,7 +120,7 @@ describe('apiClient', () => {
     it('does not make a request to create a page if it already exists', async () => {
       const PAGE_OBJECT = { html_url: 'https://actions.github.io/is-awesome/' }
       mockGetPages.mockImplementationOnce(() => Promise.resolve({ status: 200, data: PAGE_OBJECT }))
-      mockCreatePagesSite.mockImplementationOnce(() => Promise.reject({ response: { status: 404 } }))
+      mockCreatePagesSite.mockImplementationOnce(() => Promise.reject(generateRequestError(404)))
 
       const result = await apiClient.findOrCreatePagesSite({
         githubToken: GITHUB_TOKEN
@@ -117,7 +132,7 @@ describe('apiClient', () => {
 
     it('makes request to create a page by default if it does not exist', async () => {
       const PAGE_OBJECT = { html_url: 'https://actions.github.io/is-awesome/' }
-      mockGetPages.mockImplementationOnce(() => Promise.reject({ response: { status: 404 } }))
+      mockGetPages.mockImplementationOnce(() => Promise.reject(generateRequestError(404)))
       mockCreatePagesSite.mockImplementationOnce(() => Promise.resolve({ status: 201, data: PAGE_OBJECT }))
 
       const result = await apiClient.findOrCreatePagesSite({
@@ -130,7 +145,7 @@ describe('apiClient', () => {
 
     it('makes a request to create a page when explicitly enabled if it does not exist', async () => {
       const PAGE_OBJECT = { html_url: 'https://actions.github.io/is-awesome/' }
-      mockGetPages.mockImplementationOnce(() => Promise.reject({ response: { status: 404 } }))
+      mockGetPages.mockImplementationOnce(() => Promise.reject(generateRequestError(404)))
       mockCreatePagesSite.mockImplementationOnce(() => Promise.resolve({ status: 201, data: PAGE_OBJECT }))
 
       const result = await apiClient.findOrCreatePagesSite({
@@ -143,8 +158,8 @@ describe('apiClient', () => {
     })
 
     it('does not make a request to create a page when explicitly disabled even if it does not exist', async () => {
-      mockGetPages.mockImplementationOnce(() => Promise.reject({ response: { status: 404 } }))
-      mockCreatePagesSite.mockImplementationOnce(() => Promise.reject({ response: { status: 500 } })) // just so they both aren't 404
+      mockGetPages.mockImplementationOnce(() => Promise.reject(generateRequestError(404)))
+      mockCreatePagesSite.mockImplementationOnce(() => Promise.reject(generateRequestError(500))) // just so they both aren't 404
 
       let erred = false
       try {
@@ -163,8 +178,8 @@ describe('apiClient', () => {
     })
 
     it('does not make a second request to get page if create fails for reason other than existence', async () => {
-      mockGetPages.mockImplementationOnce(() => Promise.reject({ response: { status: 404 } }))
-      mockCreatePagesSite.mockImplementationOnce(() => Promise.reject({ response: { status: 500 } })) // just so they both aren't 404
+      mockGetPages.mockImplementationOnce(() => Promise.reject(generateRequestError(404)))
+      mockCreatePagesSite.mockImplementationOnce(() => Promise.reject(generateRequestError(500))) // just so they both aren't 404
 
       let erred = false
       try {
@@ -184,9 +199,9 @@ describe('apiClient', () => {
     it('makes second request to get page if create fails because of existence', async () => {
       const PAGE_OBJECT = { html_url: 'https://actions.github.io/is-awesome/' }
       mockGetPages
-        .mockImplementationOnce(() => Promise.reject({ response: { status: 404 } }))
+        .mockImplementationOnce(() => Promise.reject(generateRequestError(404)))
         .mockImplementationOnce(() => Promise.resolve({ status: 200, data: PAGE_OBJECT }))
-      mockCreatePagesSite.mockImplementationOnce(() => Promise.reject({ response: { status: 409 } }))
+      mockCreatePagesSite.mockImplementationOnce(() => Promise.reject(generateRequestError(409)))
 
       const result = await apiClient.findOrCreatePagesSite({
         githubToken: GITHUB_TOKEN

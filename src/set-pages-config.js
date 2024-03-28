@@ -1,6 +1,7 @@
 const core = require('@actions/core')
 const { ConfigParser } = require('./config-parser')
 const removeTrailingSlash = require('./remove-trailing-slash')
+const { convertErrorToAnnotationProperties } = require('./error-utils')
 
 const SUPPORTED_FILE_EXTENSIONS = ['.js', '.cjs', '.mjs']
 
@@ -88,13 +89,13 @@ function setPagesConfig({ staticSiteGenerator, generatorConfigFile, siteUrl }) {
       core.warning(
         `Unsupported configuration file extension. Currently supported extensions: ${SUPPORTED_FILE_EXTENSIONS.map(
           ext => JSON.stringify(ext)
-        ).join(', ')}`,
-        error
+        ).join(', ')}. Error: ${error.message}`,
+        convertErrorToAnnotationProperties(error)
       )
     } else {
       core.warning(
-        `We were unable to determine how to inject the site metadata into your config. Generated URLs may be incorrect. The base URL for this site should be ${siteUrl}. Please ensure your framework is configured to generate relative links appropriately.`,
-        error
+        `We were unable to determine how to inject the site metadata into your config. Generated URLs may be incorrect. The base URL for this site should be ${siteUrl}. Please ensure your framework is configured to generate relative links appropriately. Error: ${error.message}`,
+        convertErrorToAnnotationProperties(error)
       )
     }
   }
