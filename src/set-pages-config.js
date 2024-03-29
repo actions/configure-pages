@@ -1,9 +1,21 @@
+const fs = require('fs')
 const core = require('@actions/core')
 const { ConfigParser } = require('./config-parser')
 const removeTrailingSlash = require('./remove-trailing-slash')
 const { convertErrorToAnnotationProperties } = require('./error-utils')
 
 const SUPPORTED_FILE_EXTENSIONS = ['.js', '.cjs', '.mjs']
+
+function detectOrDefaultConfigFile(fileBaseName, defaultExt = '.js') {
+  for (const ext of SUPPORTED_FILE_EXTENSIONS) {
+    const potentialConfigFile = `./${fileBaseName}${ext}`
+    if (fs.existsSync(potentialConfigFile)) {
+      return potentialConfigFile
+    }
+  }
+  // If none of them exist yet, default to returning the filename with the defaultExt extension
+  return `./${fileBaseName}${defaultExt}`
+}
 
 // Return the settings to be passed to a {ConfigParser} for a given static site generator,
 // optional configuration file path, and a Pages siteUrl value to inject
@@ -13,7 +25,7 @@ function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, sit
   switch (staticSiteGenerator) {
     case 'nuxt':
       return {
-        configurationFile: generatorConfigFile || './nuxt.config.js',
+        configurationFile: generatorConfigFile || detectOrDefaultConfigFile('nuxt.config'),
         blankConfigurationFile: `${__dirname}/blank-configurations/nuxt.js`,
         properties: {
           // Configure a base path on the router
@@ -29,7 +41,7 @@ function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, sit
       path = removeTrailingSlash(path)
 
       return {
-        configurationFile: generatorConfigFile || './next.config.js',
+        configurationFile: generatorConfigFile || detectOrDefaultConfigFile('next.config'),
         blankConfigurationFile: `${__dirname}/blank-configurations/next.js`,
         properties: {
           // Static export
@@ -47,7 +59,7 @@ function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, sit
       }
     case 'gatsby':
       return {
-        configurationFile: generatorConfigFile || './gatsby-config.js',
+        configurationFile: generatorConfigFile || detectOrDefaultConfigFile('gatsby-config'),
         blankConfigurationFile: `${__dirname}/blank-configurations/gatsby.js`,
         properties: {
           // Configure a path prefix
@@ -61,7 +73,7 @@ function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, sit
       path = removeTrailingSlash(path)
 
       return {
-        configurationFile: generatorConfigFile || './svelte.config.js',
+        configurationFile: generatorConfigFile || detectOrDefaultConfigFile('svelte.config'),
         blankConfigurationFile: `${__dirname}/blank-configurations/sveltekit.js`,
         properties: {
           // Configure a base path
