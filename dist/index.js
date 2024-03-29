@@ -36734,7 +36734,7 @@ function detectOrDefaultConfigFile(fileBaseName, defaultExt = '.js') {
       return potentialConfigFile
     }
   }
-  // If none of them exist yet, default to returning the filename with the defaultExt extension
+  // If none of them exist yet, fall back to returning the filename with the defaultExt extension
   return `./${fileBaseName}${defaultExt}`
 }
 
