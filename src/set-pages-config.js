@@ -77,27 +77,23 @@ function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, sit
 
 // Inject Pages configuration in a given static site generator's configuration file
 function setPagesConfig({ staticSiteGenerator, generatorConfigFile, siteUrl }) {
+  const isSupportedFileExtension = SUPPORTED_FILE_EXTENSIONS.some(ext => generatorConfigFile.endsWith(ext))
+  if (generatorConfigFile && !isSupportedFileExtension) {
+    const supportedExtensionList = SUPPORTED_FILE_EXTENSIONS.map(ext => JSON.stringify(ext)).join(', ')
+    core.warning(
+      `Unsupported extension in configuration file: ${generatorConfigFile}. Currently supported extensions: ${supportedExtensionList}. We will still attempt to inject the site metadata into the configuration file, but it may not work as expected.`
+    )
+  }
+
   try {
     // Parse the configuration file and try to inject the Pages configuration in it
     const settings = getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, siteUrl })
     new ConfigParser(settings).injectAll()
   } catch (error) {
-    const isSupportedFileExtension = SUPPORTED_FILE_EXTENSIONS.some(ext => generatorConfigFile.endsWith(ext))
-
-    // Logging
-    if (!isSupportedFileExtension) {
-      core.warning(
-        `Unsupported configuration file extension. Currently supported extensions: ${SUPPORTED_FILE_EXTENSIONS.map(
-          ext => JSON.stringify(ext)
-        ).join(', ')}. Error: ${error.message}`,
-        convertErrorToAnnotationProperties(error)
-      )
-    } else {
-      core.warning(
-        `We were unable to determine how to inject the site metadata into your config. Generated URLs may be incorrect. The base URL for this site should be ${siteUrl}. Please ensure your framework is configured to generate relative links appropriately. Error: ${error.message}`,
-        convertErrorToAnnotationProperties(error)
-      )
-    }
+    core.warning(
+      `We were unable to determine how to inject the site metadata into your config. Generated URLs may be incorrect. The base URL for this site should be ${siteUrl}. Please ensure your framework is configured to generate relative links appropriately. Error: ${error.message}`,
+      convertErrorToAnnotationProperties(error)
+    )
   }
 }
 
