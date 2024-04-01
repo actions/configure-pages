@@ -9481,12 +9481,14 @@ module.exports = {
     // Consume `import` as an identifier for `import.meta`.
     // Because `this.parseIdent(true)` doesn't check escape sequences, it needs the check of `this.containsEsc`.
     if (this.containsEsc) { this.raiseRecoverable(this.start, "Escape sequence in keyword import"); }
-    var meta = this.parseIdent(true);
+    this.next();
 
     if (this.type === types$1.parenL && !forNew) {
       return this.parseDynamicImport(node)
     } else if (this.type === types$1.dot) {
-      node.meta = meta;
+      var meta = this.startNodeAt(node.start, node.loc && node.loc.start);
+      meta.name = "import";
+      node.meta = this.finishNode(meta, "Identifier");
       return this.parseImportMeta(node)
     } else {
       this.unexpected();
@@ -9636,7 +9638,7 @@ module.exports = {
     var node = this.startNode();
     this.next();
     if (this.options.ecmaVersion >= 6 && this.type === types$1.dot) {
-      var meta = this.startNodeAt(node.start, node.startLoc);
+      var meta = this.startNodeAt(node.start, node.loc && node.loc.start);
       meta.name = "new";
       node.meta = this.finishNode(meta, "Identifier");
       this.next();
@@ -12464,7 +12466,7 @@ module.exports = {
   // [walk]: util/walk.js
 
 
-  var version = "8.11.2";
+  var version = "8.11.3";
 
   Parser.acorn = {
     Parser: Parser,
@@ -12489,11 +12491,10 @@ module.exports = {
   };
 
   // The main exported interface (under `self.acorn` when in the
-  // browser) is a `parse` function that takes a code string and
-  // returns an abstract syntax tree as specified by [Mozilla parser
-  // API][api].
+  // browser) is a `parse` function that takes a code string and returns
+  // an abstract syntax tree as specified by the [ESTree spec][estree].
   //
-  // [api]: https://developer.mozilla.org/en-US/docs/SpiderMonkey/Parser_API
+  // [estree]: https://github.com/estree/estree
 
   function parse(input, options) {
     return Parser.parse(input, options)
@@ -38684,398 +38685,6 @@ module.exports = parseParams
 
 /***/ }),
 
-/***/ 5782:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-
-/**
- * @typedef {{ readonly [type: string]: ReadonlyArray<string> }} VisitorKeys
- */
-
-/**
- * @type {VisitorKeys}
- */
-const KEYS = {
-    ArrayExpression: [
-        "elements"
-    ],
-    ArrayPattern: [
-        "elements"
-    ],
-    ArrowFunctionExpression: [
-        "params",
-        "body"
-    ],
-    AssignmentExpression: [
-        "left",
-        "right"
-    ],
-    AssignmentPattern: [
-        "left",
-        "right"
-    ],
-    AwaitExpression: [
-        "argument"
-    ],
-    BinaryExpression: [
-        "left",
-        "right"
-    ],
-    BlockStatement: [
-        "body"
-    ],
-    BreakStatement: [
-        "label"
-    ],
-    CallExpression: [
-        "callee",
-        "arguments"
-    ],
-    CatchClause: [
-        "param",
-        "body"
-    ],
-    ChainExpression: [
-        "expression"
-    ],
-    ClassBody: [
-        "body"
-    ],
-    ClassDeclaration: [
-        "id",
-        "superClass",
-        "body"
-    ],
-    ClassExpression: [
-        "id",
-        "superClass",
-        "body"
-    ],
-    ConditionalExpression: [
-        "test",
-        "consequent",
-        "alternate"
-    ],
-    ContinueStatement: [
-        "label"
-    ],
-    DebuggerStatement: [],
-    DoWhileStatement: [
-        "body",
-        "test"
-    ],
-    EmptyStatement: [],
-    ExperimentalRestProperty: [
-        "argument"
-    ],
-    ExperimentalSpreadProperty: [
-        "argument"
-    ],
-    ExportAllDeclaration: [
-        "exported",
-        "source"
-    ],
-    ExportDefaultDeclaration: [
-        "declaration"
-    ],
-    ExportNamedDeclaration: [
-        "declaration",
-        "specifiers",
-        "source"
-    ],
-    ExportSpecifier: [
-        "exported",
-        "local"
-    ],
-    ExpressionStatement: [
-        "expression"
-    ],
-    ForInStatement: [
-        "left",
-        "right",
-        "body"
-    ],
-    ForOfStatement: [
-        "left",
-        "right",
-        "body"
-    ],
-    ForStatement: [
-        "init",
-        "test",
-        "update",
-        "body"
-    ],
-    FunctionDeclaration: [
-        "id",
-        "params",
-        "body"
-    ],
-    FunctionExpression: [
-        "id",
-        "params",
-        "body"
-    ],
-    Identifier: [],
-    IfStatement: [
-        "test",
-        "consequent",
-        "alternate"
-    ],
-    ImportDeclaration: [
-        "specifiers",
-        "source"
-    ],
-    ImportDefaultSpecifier: [
-        "local"
-    ],
-    ImportExpression: [
-        "source"
-    ],
-    ImportNamespaceSpecifier: [
-        "local"
-    ],
-    ImportSpecifier: [
-        "imported",
-        "local"
-    ],
-    JSXAttribute: [
-        "name",
-        "value"
-    ],
-    JSXClosingElement: [
-        "name"
-    ],
-    JSXClosingFragment: [],
-    JSXElement: [
-        "openingElement",
-        "children",
-        "closingElement"
-    ],
-    JSXEmptyExpression: [],
-    JSXExpressionContainer: [
-        "expression"
-    ],
-    JSXFragment: [
-        "openingFragment",
-        "children",
-        "closingFragment"
-    ],
-    JSXIdentifier: [],
-    JSXMemberExpression: [
-        "object",
-        "property"
-    ],
-    JSXNamespacedName: [
-        "namespace",
-        "name"
-    ],
-    JSXOpeningElement: [
-        "name",
-        "attributes"
-    ],
-    JSXOpeningFragment: [],
-    JSXSpreadAttribute: [
-        "argument"
-    ],
-    JSXSpreadChild: [
-        "expression"
-    ],
-    JSXText: [],
-    LabeledStatement: [
-        "label",
-        "body"
-    ],
-    Literal: [],
-    LogicalExpression: [
-        "left",
-        "right"
-    ],
-    MemberExpression: [
-        "object",
-        "property"
-    ],
-    MetaProperty: [
-        "meta",
-        "property"
-    ],
-    MethodDefinition: [
-        "key",
-        "value"
-    ],
-    NewExpression: [
-        "callee",
-        "arguments"
-    ],
-    ObjectExpression: [
-        "properties"
-    ],
-    ObjectPattern: [
-        "properties"
-    ],
-    PrivateIdentifier: [],
-    Program: [
-        "body"
-    ],
-    Property: [
-        "key",
-        "value"
-    ],
-    PropertyDefinition: [
-        "key",
-        "value"
-    ],
-    RestElement: [
-        "argument"
-    ],
-    ReturnStatement: [
-        "argument"
-    ],
-    SequenceExpression: [
-        "expressions"
-    ],
-    SpreadElement: [
-        "argument"
-    ],
-    StaticBlock: [
-        "body"
-    ],
-    Super: [],
-    SwitchCase: [
-        "test",
-        "consequent"
-    ],
-    SwitchStatement: [
-        "discriminant",
-        "cases"
-    ],
-    TaggedTemplateExpression: [
-        "tag",
-        "quasi"
-    ],
-    TemplateElement: [],
-    TemplateLiteral: [
-        "quasis",
-        "expressions"
-    ],
-    ThisExpression: [],
-    ThrowStatement: [
-        "argument"
-    ],
-    TryStatement: [
-        "block",
-        "handler",
-        "finalizer"
-    ],
-    UnaryExpression: [
-        "argument"
-    ],
-    UpdateExpression: [
-        "argument"
-    ],
-    VariableDeclaration: [
-        "declarations"
-    ],
-    VariableDeclarator: [
-        "id",
-        "init"
-    ],
-    WhileStatement: [
-        "test",
-        "body"
-    ],
-    WithStatement: [
-        "object",
-        "body"
-    ],
-    YieldExpression: [
-        "argument"
-    ]
-};
-
-// Types.
-const NODE_TYPES = Object.keys(KEYS);
-
-// Freeze the keys.
-for (const type of NODE_TYPES) {
-    Object.freeze(KEYS[type]);
-}
-Object.freeze(KEYS);
-
-/**
- * @author Toru Nagashima <https://github.com/mysticatea>
- * See LICENSE file in root directory for full license.
- */
-
-/**
- * @typedef {import('./visitor-keys.js').VisitorKeys} VisitorKeys
- */
-
-// List to ignore keys.
-const KEY_BLACKLIST = new Set([
-    "parent",
-    "leadingComments",
-    "trailingComments"
-]);
-
-/**
- * Check whether a given key should be used or not.
- * @param {string} key The key to check.
- * @returns {boolean} `true` if the key should be used.
- */
-function filterKey(key) {
-    return !KEY_BLACKLIST.has(key) && key[0] !== "_";
-}
-
-/**
- * Get visitor keys of a given node.
- * @param {object} node The AST node to get keys.
- * @returns {readonly string[]} Visitor keys of the node.
- */
-function getKeys(node) {
-    return Object.keys(node).filter(filterKey);
-}
-
-// Disable valid-jsdoc rule because it reports syntax error on the type of @returns.
-// eslint-disable-next-line valid-jsdoc
-/**
- * Make the union set with `KEYS` and given keys.
- * @param {VisitorKeys} additionalKeys The additional keys.
- * @returns {VisitorKeys} The union set.
- */
-function unionWith(additionalKeys) {
-    const retv = /** @type {{
-        [type: string]: ReadonlyArray<string>
-    }} */ (Object.assign({}, KEYS));
-
-    for (const type of Object.keys(additionalKeys)) {
-        if (Object.prototype.hasOwnProperty.call(retv, type)) {
-            const keys = new Set(additionalKeys[type]);
-
-            for (const key of retv[type]) {
-                keys.add(key);
-            }
-
-            retv[type] = Object.freeze(Array.from(keys));
-        } else {
-            retv[type] = Object.freeze(Array.from(additionalKeys[type]));
-        }
-    }
-
-    return Object.freeze(retv);
-}
-
-exports.KEYS = KEYS;
-exports.getKeys = getKeys;
-exports.unionWith = unionWith;
-
-
-/***/ }),
-
 /***/ 6910:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
@@ -39086,7 +38695,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 
 var acorn = __nccwpck_require__(390);
 var jsx = __nccwpck_require__(4243);
-var visitorKeys = __nccwpck_require__(5782);
+var visitorKeys = __nccwpck_require__(4594);
 
 function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
 
@@ -39841,7 +39450,7 @@ var espree = () => Parser => {
     };
 };
 
-const version$1 = "9.6.1";
+const version$1 = "10.0.1";
 
 /* eslint-disable jsdoc/no-multi-asterisks -- needed to preserve original formatting of licences */
 
@@ -39963,6 +39572,398 @@ exports.parse = parse;
 exports.supportedEcmaVersions = supportedEcmaVersions;
 exports.tokenize = tokenize;
 exports.version = version;
+
+
+/***/ }),
+
+/***/ 4594:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+
+/**
+ * @typedef {{ readonly [type: string]: ReadonlyArray<string> }} VisitorKeys
+ */
+
+/**
+ * @type {VisitorKeys}
+ */
+const KEYS = {
+    ArrayExpression: [
+        "elements"
+    ],
+    ArrayPattern: [
+        "elements"
+    ],
+    ArrowFunctionExpression: [
+        "params",
+        "body"
+    ],
+    AssignmentExpression: [
+        "left",
+        "right"
+    ],
+    AssignmentPattern: [
+        "left",
+        "right"
+    ],
+    AwaitExpression: [
+        "argument"
+    ],
+    BinaryExpression: [
+        "left",
+        "right"
+    ],
+    BlockStatement: [
+        "body"
+    ],
+    BreakStatement: [
+        "label"
+    ],
+    CallExpression: [
+        "callee",
+        "arguments"
+    ],
+    CatchClause: [
+        "param",
+        "body"
+    ],
+    ChainExpression: [
+        "expression"
+    ],
+    ClassBody: [
+        "body"
+    ],
+    ClassDeclaration: [
+        "id",
+        "superClass",
+        "body"
+    ],
+    ClassExpression: [
+        "id",
+        "superClass",
+        "body"
+    ],
+    ConditionalExpression: [
+        "test",
+        "consequent",
+        "alternate"
+    ],
+    ContinueStatement: [
+        "label"
+    ],
+    DebuggerStatement: [],
+    DoWhileStatement: [
+        "body",
+        "test"
+    ],
+    EmptyStatement: [],
+    ExperimentalRestProperty: [
+        "argument"
+    ],
+    ExperimentalSpreadProperty: [
+        "argument"
+    ],
+    ExportAllDeclaration: [
+        "exported",
+        "source"
+    ],
+    ExportDefaultDeclaration: [
+        "declaration"
+    ],
+    ExportNamedDeclaration: [
+        "declaration",
+        "specifiers",
+        "source"
+    ],
+    ExportSpecifier: [
+        "exported",
+        "local"
+    ],
+    ExpressionStatement: [
+        "expression"
+    ],
+    ForInStatement: [
+        "left",
+        "right",
+        "body"
+    ],
+    ForOfStatement: [
+        "left",
+        "right",
+        "body"
+    ],
+    ForStatement: [
+        "init",
+        "test",
+        "update",
+        "body"
+    ],
+    FunctionDeclaration: [
+        "id",
+        "params",
+        "body"
+    ],
+    FunctionExpression: [
+        "id",
+        "params",
+        "body"
+    ],
+    Identifier: [],
+    IfStatement: [
+        "test",
+        "consequent",
+        "alternate"
+    ],
+    ImportDeclaration: [
+        "specifiers",
+        "source"
+    ],
+    ImportDefaultSpecifier: [
+        "local"
+    ],
+    ImportExpression: [
+        "source"
+    ],
+    ImportNamespaceSpecifier: [
+        "local"
+    ],
+    ImportSpecifier: [
+        "imported",
+        "local"
+    ],
+    JSXAttribute: [
+        "name",
+        "value"
+    ],
+    JSXClosingElement: [
+        "name"
+    ],
+    JSXClosingFragment: [],
+    JSXElement: [
+        "openingElement",
+        "children",
+        "closingElement"
+    ],
+    JSXEmptyExpression: [],
+    JSXExpressionContainer: [
+        "expression"
+    ],
+    JSXFragment: [
+        "openingFragment",
+        "children",
+        "closingFragment"
+    ],
+    JSXIdentifier: [],
+    JSXMemberExpression: [
+        "object",
+        "property"
+    ],
+    JSXNamespacedName: [
+        "namespace",
+        "name"
+    ],
+    JSXOpeningElement: [
+        "name",
+        "attributes"
+    ],
+    JSXOpeningFragment: [],
+    JSXSpreadAttribute: [
+        "argument"
+    ],
+    JSXSpreadChild: [
+        "expression"
+    ],
+    JSXText: [],
+    LabeledStatement: [
+        "label",
+        "body"
+    ],
+    Literal: [],
+    LogicalExpression: [
+        "left",
+        "right"
+    ],
+    MemberExpression: [
+        "object",
+        "property"
+    ],
+    MetaProperty: [
+        "meta",
+        "property"
+    ],
+    MethodDefinition: [
+        "key",
+        "value"
+    ],
+    NewExpression: [
+        "callee",
+        "arguments"
+    ],
+    ObjectExpression: [
+        "properties"
+    ],
+    ObjectPattern: [
+        "properties"
+    ],
+    PrivateIdentifier: [],
+    Program: [
+        "body"
+    ],
+    Property: [
+        "key",
+        "value"
+    ],
+    PropertyDefinition: [
+        "key",
+        "value"
+    ],
+    RestElement: [
+        "argument"
+    ],
+    ReturnStatement: [
+        "argument"
+    ],
+    SequenceExpression: [
+        "expressions"
+    ],
+    SpreadElement: [
+        "argument"
+    ],
+    StaticBlock: [
+        "body"
+    ],
+    Super: [],
+    SwitchCase: [
+        "test",
+        "consequent"
+    ],
+    SwitchStatement: [
+        "discriminant",
+        "cases"
+    ],
+    TaggedTemplateExpression: [
+        "tag",
+        "quasi"
+    ],
+    TemplateElement: [],
+    TemplateLiteral: [
+        "quasis",
+        "expressions"
+    ],
+    ThisExpression: [],
+    ThrowStatement: [
+        "argument"
+    ],
+    TryStatement: [
+        "block",
+        "handler",
+        "finalizer"
+    ],
+    UnaryExpression: [
+        "argument"
+    ],
+    UpdateExpression: [
+        "argument"
+    ],
+    VariableDeclaration: [
+        "declarations"
+    ],
+    VariableDeclarator: [
+        "id",
+        "init"
+    ],
+    WhileStatement: [
+        "test",
+        "body"
+    ],
+    WithStatement: [
+        "object",
+        "body"
+    ],
+    YieldExpression: [
+        "argument"
+    ]
+};
+
+// Types.
+const NODE_TYPES = Object.keys(KEYS);
+
+// Freeze the keys.
+for (const type of NODE_TYPES) {
+    Object.freeze(KEYS[type]);
+}
+Object.freeze(KEYS);
+
+/**
+ * @author Toru Nagashima <https://github.com/mysticatea>
+ * See LICENSE file in root directory for full license.
+ */
+
+/**
+ * @typedef {import('./visitor-keys.js').VisitorKeys} VisitorKeys
+ */
+
+// List to ignore keys.
+const KEY_BLACKLIST = new Set([
+    "parent",
+    "leadingComments",
+    "trailingComments"
+]);
+
+/**
+ * Check whether a given key should be used or not.
+ * @param {string} key The key to check.
+ * @returns {boolean} `true` if the key should be used.
+ */
+function filterKey(key) {
+    return !KEY_BLACKLIST.has(key) && key[0] !== "_";
+}
+
+/**
+ * Get visitor keys of a given node.
+ * @param {object} node The AST node to get keys.
+ * @returns {readonly string[]} Visitor keys of the node.
+ */
+function getKeys(node) {
+    return Object.keys(node).filter(filterKey);
+}
+
+// Disable valid-jsdoc rule because it reports syntax error on the type of @returns.
+// eslint-disable-next-line valid-jsdoc
+/**
+ * Make the union set with `KEYS` and given keys.
+ * @param {VisitorKeys} additionalKeys The additional keys.
+ * @returns {VisitorKeys} The union set.
+ */
+function unionWith(additionalKeys) {
+    const retv = /** @type {{
+        [type: string]: ReadonlyArray<string>
+    }} */ (Object.assign({}, KEYS));
+
+    for (const type of Object.keys(additionalKeys)) {
+        if (Object.prototype.hasOwnProperty.call(retv, type)) {
+            const keys = new Set(additionalKeys[type]);
+
+            for (const key of retv[type]) {
+                keys.add(key);
+            }
+
+            retv[type] = Object.freeze(Array.from(keys));
+        } else {
+            retv[type] = Object.freeze(Array.from(additionalKeys[type]));
+        }
+    }
+
+    return Object.freeze(retv);
+}
+
+exports.KEYS = KEYS;
+exports.getKeys = getKeys;
+exports.unionWith = unionWith;
 
 
 /***/ })
