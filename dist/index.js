@@ -7206,7 +7206,7 @@ module.exports = {
 
   // ## Parser utilities
 
-  var literal = /^(?:'((?:\\.|[^'\\])*?)'|"((?:\\.|[^"\\])*?)")/;
+  var literal = /^(?:'((?:\\[^]|[^'\\])*?)'|"((?:\\[^]|[^"\\])*?)")/;
   pp$9.strictDirective = function(start) {
     if (this.options.ecmaVersion < 5) { return false }
     for (;;) {
@@ -7392,7 +7392,7 @@ module.exports = {
     // Statement) is allowed here. If context is not empty then only a Statement
     // is allowed. However, `let [` is an explicit negative lookahead for
     // ExpressionStatement, so special-case it first.
-    if (nextCh === 91 || nextCh === 92) { return true } // '[', '/'
+    if (nextCh === 91 || nextCh === 92) { return true } // '[', '\'
     if (context) { return false }
 
     if (nextCh === 123 || nextCh > 0xd7ff && nextCh < 0xdc00) { return true } // '{', astral
@@ -7585,13 +7585,19 @@ module.exports = {
       return this.parseFor(node, init$1)
     }
     var startsWithLet = this.isContextual("let"), isForOf = false;
+    var containsEsc = this.containsEsc;
     var refDestructuringErrors = new DestructuringErrors;
-    var init = this.parseExpression(awaitAt > -1 ? "await" : true, refDestructuringErrors);
+    var initPos = this.start;
+    var init = awaitAt > -1
+      ? this.parseExprSubscripts(refDestructuringErrors, "await")
+      : this.parseExpression(true, refDestructuringErrors);
     if (this.type === types$1._in || (isForOf = this.options.ecmaVersion >= 6 && this.isContextual("of"))) {
-      if (this.options.ecmaVersion >= 9) {
-        if (this.type === types$1._in) {
-          if (awaitAt > -1) { this.unexpected(awaitAt); }
-        } else { node.await = awaitAt > -1; }
+      if (awaitAt > -1) { // implies `ecmaVersion >= 9` (see declaration of awaitAt)
+        if (this.type === types$1._in) { this.unexpected(awaitAt); }
+        node.await = true;
+      } else if (isForOf && this.options.ecmaVersion >= 8) {
+        if (init.start === initPos && !containsEsc && init.type === "Identifier" && init.name === "async") { this.unexpected(); }
+        else if (this.options.ecmaVersion >= 9) { node.await = false; }
       }
       if (startsWithLet && isForOf) { this.raise(init.start, "The left-hand side of a for-of loop may not start with 'let'."); }
       this.toAssignable(init, false, refDestructuringErrors);
@@ -9204,8 +9210,7 @@ module.exports = {
       node.argument = this.parseMaybeUnary(null, true, update, forInit);
       this.checkExpressionErrors(refDestructuringErrors, true);
       if (update) { this.checkLValSimple(node.argument); }
-      else if (this.strict && node.operator === "delete" &&
-               node.argument.type === "Identifier")
+      else if (this.strict && node.operator === "delete" && isLocalVariableAccess(node.argument))
         { this.raiseRecoverable(node.start, "Deleting local variable in strict mode"); }
       else if (node.operator === "delete" && isPrivateFieldAccess(node.argument))
         { this.raiseRecoverable(node.start, "Private fields can not be deleted"); }
@@ -9240,10 +9245,18 @@ module.exports = {
     }
   };
 
+  function isLocalVariableAccess(node) {
+    return (
+      node.type === "Identifier" ||
+      node.type === "ParenthesizedExpression" && isLocalVariableAccess(node.expression)
+    )
+  }
+
   function isPrivateFieldAccess(node) {
     return (
       node.type === "MemberExpression" && node.property.type === "PrivateIdentifier" ||
-      node.type === "ChainExpression" && isPrivateFieldAccess(node.expression)
+      node.type === "ChainExpression" && isPrivateFieldAccess(node.expression) ||
+      node.type === "ParenthesizedExpression" && isPrivateFieldAccess(node.expression)
     )
   }
 
@@ -9481,12 +9494,14 @@ module.exports = {
     // Consume `import` as an identifier for `import.meta`.
     // Because `this.parseIdent(true)` doesn't check escape sequences, it needs the check of `this.containsEsc`.
     if (this.containsEsc) { this.raiseRecoverable(this.start, "Escape sequence in keyword import"); }
-    var meta = this.parseIdent(true);
+    this.next();
 
     if (this.type === types$1.parenL && !forNew) {
       return this.parseDynamicImport(node)
     } else if (this.type === types$1.dot) {
-      node.meta = meta;
+      var meta = this.startNodeAt(node.start, node.loc && node.loc.start);
+      meta.name = "import";
+      node.meta = this.finishNode(meta, "Identifier");
       return this.parseImportMeta(node)
     } else {
       this.unexpected();
@@ -9636,7 +9651,7 @@ module.exports = {
     var node = this.startNode();
     this.next();
     if (this.options.ecmaVersion >= 6 && this.type === types$1.dot) {
-      var meta = this.startNodeAt(node.start, node.startLoc);
+      var meta = this.startNodeAt(node.start, node.loc && node.loc.start);
       meta.name = "new";
       node.meta = this.finishNode(meta, "Identifier");
       this.next();
@@ -9668,7 +9683,7 @@ module.exports = {
         this.raiseRecoverable(this.start, "Bad escape sequence in untagged template literal");
       }
       elem.value = {
-        raw: this.value,
+        raw: this.value.replace(/\r\n?/g, "\n"),
         cooked: null
       };
     } else {
@@ -10343,6 +10358,30 @@ module.exports = {
 
   var pp$1 = Parser.prototype;
 
+  // Track disjunction structure to determine whether a duplicate
+  // capture group name is allowed because it is in a separate branch.
+  var BranchID = function BranchID(parent, base) {
+    // Parent disjunction branch
+    this.parent = parent;
+    // Identifies this set of sibling branches
+    this.base = base || this;
+  };
+
+  BranchID.prototype.separatedFrom = function separatedFrom (alt) {
+    // A branch is separate from another branch if they or any of
+    // their parents are siblings in a given disjunction
+    for (var self = this; self; self = self.parent) {
+      for (var other = alt; other; other = other.parent) {
+        if (self.base === other.base && self !== other) { return true }
+      }
+    }
+    return false
+  };
+
+  BranchID.prototype.sibling = function sibling () {
+    return new BranchID(this.parent, this.base)
+  };
+
   var RegExpValidationState = function RegExpValidationState(parser) {
     this.parser = parser;
     this.validFlags = "gim" + (parser.options.ecmaVersion >= 6 ? "uy" : "") + (parser.options.ecmaVersion >= 9 ? "s" : "") + (parser.options.ecmaVersion >= 13 ? "d" : "") + (parser.options.ecmaVersion >= 15 ? "v" : "");
@@ -10359,8 +10398,9 @@ module.exports = {
     this.lastAssertionIsQuantifiable = false;
     this.numCapturingParens = 0;
     this.maxBackReference = 0;
-    this.groupNames = [];
+    this.groupNames = Object.create(null);
     this.backReferenceNames = [];
+    this.branchID = null;
   };
 
   RegExpValidationState.prototype.reset = function reset (start, pattern, flags) {
@@ -10492,6 +10532,11 @@ module.exports = {
     }
   };
 
+  function hasProp(obj) {
+    for (var _ in obj) { return true }
+    return false
+  }
+
   /**
    * Validate the pattern part of a given RegExpLiteral.
    *
@@ -10506,7 +10551,7 @@ module.exports = {
     // |Pattern[~U, +N]| and use this result instead. Throw a *SyntaxError*
     // exception if _P_ did not conform to the grammar, if any elements of _P_
     // were not matched by the parse, or if any Early Error conditions exist.
-    if (!state.switchN && this.options.ecmaVersion >= 9 && state.groupNames.length > 0) {
+    if (!state.switchN && this.options.ecmaVersion >= 9 && hasProp(state.groupNames)) {
       state.switchN = true;
       this.regexp_pattern(state);
     }
@@ -10520,8 +10565,9 @@ module.exports = {
     state.lastAssertionIsQuantifiable = false;
     state.numCapturingParens = 0;
     state.maxBackReference = 0;
-    state.groupNames.length = 0;
+    state.groupNames = Object.create(null);
     state.backReferenceNames.length = 0;
+    state.branchID = null;
 
     this.regexp_disjunction(state);
 
@@ -10540,7 +10586,7 @@ module.exports = {
     for (var i = 0, list = state.backReferenceNames; i < list.length; i += 1) {
       var name = list[i];
 
-      if (state.groupNames.indexOf(name) === -1) {
+      if (!state.groupNames[name]) {
         state.raise("Invalid named capture referenced");
       }
     }
@@ -10548,10 +10594,14 @@ module.exports = {
 
   // https://www.ecma-international.org/ecma-262/8.0/#prod-Disjunction
   pp$1.regexp_disjunction = function(state) {
+    var trackDisjunction = this.options.ecmaVersion >= 16;
+    if (trackDisjunction) { state.branchID = new BranchID(state.branchID, null); }
     this.regexp_alternative(state);
     while (state.eat(0x7C /* | */)) {
+      if (trackDisjunction) { state.branchID = state.branchID.sibling(); }
       this.regexp_alternative(state);
     }
+    if (trackDisjunction) { state.branchID = state.branchID.parent; }
 
     // Make the same message as V8.
     if (this.regexp_eatQuantifier(state, true)) {
@@ -10564,8 +10614,7 @@ module.exports = {
 
   // https://www.ecma-international.org/ecma-262/8.0/#prod-Alternative
   pp$1.regexp_alternative = function(state) {
-    while (state.pos < state.source.length && this.regexp_eatTerm(state))
-      { }
+    while (state.pos < state.source.length && this.regexp_eatTerm(state)) {}
   };
 
   // https://www.ecma-international.org/ecma-262/8.0/#prod-annexB-Term
@@ -10803,14 +10852,26 @@ module.exports = {
   //   `?` GroupName
   pp$1.regexp_groupSpecifier = function(state) {
     if (state.eat(0x3F /* ? */)) {
-      if (this.regexp_eatGroupName(state)) {
-        if (state.groupNames.indexOf(state.lastStringValue) !== -1) {
+      if (!this.regexp_eatGroupName(state)) { state.raise("Invalid group"); }
+      var trackDisjunction = this.options.ecmaVersion >= 16;
+      var known = state.groupNames[state.lastStringValue];
+      if (known) {
+        if (trackDisjunction) {
+          for (var i = 0, list = known; i < list.length; i += 1) {
+            var altID = list[i];
+
+            if (!altID.separatedFrom(state.branchID))
+              { state.raise("Duplicate capture group name"); }
+          }
+        } else {
           state.raise("Duplicate capture group name");
         }
-        state.groupNames.push(state.lastStringValue);
-        return
       }
-      state.raise("Invalid group");
+      if (trackDisjunction) {
+        (known || (state.groupNames[state.lastStringValue] = [])).push(state.branchID);
+      } else {
+        state.groupNames[state.lastStringValue] = true;
+      }
     }
   };
 
@@ -12315,15 +12376,18 @@ module.exports = {
         break
 
       case "$":
-        if (this.input[this.pos + 1] !== "{") {
-          break
-        }
-
-      // falls through
+        if (this.input[this.pos + 1] !== "{") { break }
+        // fall through
       case "`":
         return this.finishToken(types$1.invalidTemplate, this.input.slice(this.start, this.pos))
 
-      // no default
+      case "\r":
+        if (this.input[this.pos + 1] === "\n") { ++this.pos; }
+        // fall through
+      case "\n": case "\u2028": case "\u2029":
+        ++this.curLine;
+        this.lineStart = this.pos + 1;
+        break
       }
     }
     this.raise(this.start, "Unterminated template");
@@ -12386,6 +12450,7 @@ module.exports = {
       if (isNewLine(ch)) {
         // Unicode new line characters after \ get removed from output in both
         // template literals and strings
+        if (this.options.locations) { this.lineStart = this.pos; ++this.curLine; }
         return ""
       }
       return String.fromCharCode(ch)
@@ -12464,7 +12529,7 @@ module.exports = {
   // [walk]: util/walk.js
 
 
-  var version = "8.11.2";
+  var version = "8.12.1";
 
   Parser.acorn = {
     Parser: Parser,
@@ -12489,11 +12554,10 @@ module.exports = {
   };
 
   // The main exported interface (under `self.acorn` when in the
-  // browser) is a `parse` function that takes a code string and
-  // returns an abstract syntax tree as specified by [Mozilla parser
-  // API][api].
+  // browser) is a `parse` function that takes a code string and returns
+  // an abstract syntax tree as specified by the [ESTree spec][estree].
   //
-  // [api]: https://developer.mozilla.org/en-US/docs/SpiderMonkey/Parser_API
+  // [estree]: https://github.com/estree/estree
 
   function parse(input, options) {
     return Parser.parse(input, options)
@@ -38899,398 +38963,6 @@ module.exports = parseParams
 
 /***/ }),
 
-/***/ 5782:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-
-/**
- * @typedef {{ readonly [type: string]: ReadonlyArray<string> }} VisitorKeys
- */
-
-/**
- * @type {VisitorKeys}
- */
-const KEYS = {
-    ArrayExpression: [
-        "elements"
-    ],
-    ArrayPattern: [
-        "elements"
-    ],
-    ArrowFunctionExpression: [
-        "params",
-        "body"
-    ],
-    AssignmentExpression: [
-        "left",
-        "right"
-    ],
-    AssignmentPattern: [
-        "left",
-        "right"
-    ],
-    AwaitExpression: [
-        "argument"
-    ],
-    BinaryExpression: [
-        "left",
-        "right"
-    ],
-    BlockStatement: [
-        "body"
-    ],
-    BreakStatement: [
-        "label"
-    ],
-    CallExpression: [
-        "callee",
-        "arguments"
-    ],
-    CatchClause: [
-        "param",
-        "body"
-    ],
-    ChainExpression: [
-        "expression"
-    ],
-    ClassBody: [
-        "body"
-    ],
-    ClassDeclaration: [
-        "id",
-        "superClass",
-        "body"
-    ],
-    ClassExpression: [
-        "id",
-        "superClass",
-        "body"
-    ],
-    ConditionalExpression: [
-        "test",
-        "consequent",
-        "alternate"
-    ],
-    ContinueStatement: [
-        "label"
-    ],
-    DebuggerStatement: [],
-    DoWhileStatement: [
-        "body",
-        "test"
-    ],
-    EmptyStatement: [],
-    ExperimentalRestProperty: [
-        "argument"
-    ],
-    ExperimentalSpreadProperty: [
-        "argument"
-    ],
-    ExportAllDeclaration: [
-        "exported",
-        "source"
-    ],
-    ExportDefaultDeclaration: [
-        "declaration"
-    ],
-    ExportNamedDeclaration: [
-        "declaration",
-        "specifiers",
-        "source"
-    ],
-    ExportSpecifier: [
-        "exported",
-        "local"
-    ],
-    ExpressionStatement: [
-        "expression"
-    ],
-    ForInStatement: [
-        "left",
-        "right",
-        "body"
-    ],
-    ForOfStatement: [
-        "left",
-        "right",
-        "body"
-    ],
-    ForStatement: [
-        "init",
-        "test",
-        "update",
-        "body"
-    ],
-    FunctionDeclaration: [
-        "id",
-        "params",
-        "body"
-    ],
-    FunctionExpression: [
-        "id",
-        "params",
-        "body"
-    ],
-    Identifier: [],
-    IfStatement: [
-        "test",
-        "consequent",
-        "alternate"
-    ],
-    ImportDeclaration: [
-        "specifiers",
-        "source"
-    ],
-    ImportDefaultSpecifier: [
-        "local"
-    ],
-    ImportExpression: [
-        "source"
-    ],
-    ImportNamespaceSpecifier: [
-        "local"
-    ],
-    ImportSpecifier: [
-        "imported",
-        "local"
-    ],
-    JSXAttribute: [
-        "name",
-        "value"
-    ],
-    JSXClosingElement: [
-        "name"
-    ],
-    JSXClosingFragment: [],
-    JSXElement: [
-        "openingElement",
-        "children",
-        "closingElement"
-    ],
-    JSXEmptyExpression: [],
-    JSXExpressionContainer: [
-        "expression"
-    ],
-    JSXFragment: [
-        "openingFragment",
-        "children",
-        "closingFragment"
-    ],
-    JSXIdentifier: [],
-    JSXMemberExpression: [
-        "object",
-        "property"
-    ],
-    JSXNamespacedName: [
-        "namespace",
-        "name"
-    ],
-    JSXOpeningElement: [
-        "name",
-        "attributes"
-    ],
-    JSXOpeningFragment: [],
-    JSXSpreadAttribute: [
-        "argument"
-    ],
-    JSXSpreadChild: [
-        "expression"
-    ],
-    JSXText: [],
-    LabeledStatement: [
-        "label",
-        "body"
-    ],
-    Literal: [],
-    LogicalExpression: [
-        "left",
-        "right"
-    ],
-    MemberExpression: [
-        "object",
-        "property"
-    ],
-    MetaProperty: [
-        "meta",
-        "property"
-    ],
-    MethodDefinition: [
-        "key",
-        "value"
-    ],
-    NewExpression: [
-        "callee",
-        "arguments"
-    ],
-    ObjectExpression: [
-        "properties"
-    ],
-    ObjectPattern: [
-        "properties"
-    ],
-    PrivateIdentifier: [],
-    Program: [
-        "body"
-    ],
-    Property: [
-        "key",
-        "value"
-    ],
-    PropertyDefinition: [
-        "key",
-        "value"
-    ],
-    RestElement: [
-        "argument"
-    ],
-    ReturnStatement: [
-        "argument"
-    ],
-    SequenceExpression: [
-        "expressions"
-    ],
-    SpreadElement: [
-        "argument"
-    ],
-    StaticBlock: [
-        "body"
-    ],
-    Super: [],
-    SwitchCase: [
-        "test",
-        "consequent"
-    ],
-    SwitchStatement: [
-        "discriminant",
-        "cases"
-    ],
-    TaggedTemplateExpression: [
-        "tag",
-        "quasi"
-    ],
-    TemplateElement: [],
-    TemplateLiteral: [
-        "quasis",
-        "expressions"
-    ],
-    ThisExpression: [],
-    ThrowStatement: [
-        "argument"
-    ],
-    TryStatement: [
-        "block",
-        "handler",
-        "finalizer"
-    ],
-    UnaryExpression: [
-        "argument"
-    ],
-    UpdateExpression: [
-        "argument"
-    ],
-    VariableDeclaration: [
-        "declarations"
-    ],
-    VariableDeclarator: [
-        "id",
-        "init"
-    ],
-    WhileStatement: [
-        "test",
-        "body"
-    ],
-    WithStatement: [
-        "object",
-        "body"
-    ],
-    YieldExpression: [
-        "argument"
-    ]
-};
-
-// Types.
-const NODE_TYPES = Object.keys(KEYS);
-
-// Freeze the keys.
-for (const type of NODE_TYPES) {
-    Object.freeze(KEYS[type]);
-}
-Object.freeze(KEYS);
-
-/**
- * @author Toru Nagashima <https://github.com/mysticatea>
- * See LICENSE file in root directory for full license.
- */
-
-/**
- * @typedef {import('./visitor-keys.js').VisitorKeys} VisitorKeys
- */
-
-// List to ignore keys.
-const KEY_BLACKLIST = new Set([
-    "parent",
-    "leadingComments",
-    "trailingComments"
-]);
-
-/**
- * Check whether a given key should be used or not.
- * @param {string} key The key to check.
- * @returns {boolean} `true` if the key should be used.
- */
-function filterKey(key) {
-    return !KEY_BLACKLIST.has(key) && key[0] !== "_";
-}
-
-/**
- * Get visitor keys of a given node.
- * @param {object} node The AST node to get keys.
- * @returns {readonly string[]} Visitor keys of the node.
- */
-function getKeys(node) {
-    return Object.keys(node).filter(filterKey);
-}
-
-// Disable valid-jsdoc rule because it reports syntax error on the type of @returns.
-// eslint-disable-next-line valid-jsdoc
-/**
- * Make the union set with `KEYS` and given keys.
- * @param {VisitorKeys} additionalKeys The additional keys.
- * @returns {VisitorKeys} The union set.
- */
-function unionWith(additionalKeys) {
-    const retv = /** @type {{
-        [type: string]: ReadonlyArray<string>
-    }} */ (Object.assign({}, KEYS));
-
-    for (const type of Object.keys(additionalKeys)) {
-        if (Object.prototype.hasOwnProperty.call(retv, type)) {
-            const keys = new Set(additionalKeys[type]);
-
-            for (const key of retv[type]) {
-                keys.add(key);
-            }
-
-            retv[type] = Object.freeze(Array.from(keys));
-        } else {
-            retv[type] = Object.freeze(Array.from(additionalKeys[type]));
-        }
-    }
-
-    return Object.freeze(retv);
-}
-
-exports.KEYS = KEYS;
-exports.getKeys = getKeys;
-exports.unionWith = unionWith;
-
-
-/***/ }),
-
 /***/ 6910:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
@@ -39301,7 +38973,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 
 var acorn = __nccwpck_require__(390);
 var jsx = __nccwpck_require__(4243);
-var visitorKeys = __nccwpck_require__(5782);
+var visitorKeys = __nccwpck_require__(4594);
 
 function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
 
@@ -39369,7 +39041,7 @@ const Token = {
  */
 function convertTemplatePart(tokens, code) {
     const firstToken = tokens[0],
-        lastTemplateToken = tokens[tokens.length - 1];
+        lastTemplateToken = tokens.at(-1);
 
     const token = {
         type: Token.Template,
@@ -39606,7 +39278,8 @@ const SUPPORTED_VERSIONS = [
     12, // 2021
     13, // 2022
     14, // 2023
-    15 // 2024
+    15, // 2024
+    16 // 2025
 ];
 
 /**
@@ -39614,7 +39287,7 @@ const SUPPORTED_VERSIONS = [
  * @returns {number} The latest ECMAScript version.
  */
 function getLatestEcmaVersion() {
-    return SUPPORTED_VERSIONS[SUPPORTED_VERSIONS.length - 1];
+    return SUPPORTED_VERSIONS.at(-1);
 }
 
 /**
@@ -40056,9 +39729,64 @@ var espree = () => Parser => {
     };
 };
 
-const version$1 = "9.6.1";
+const version$1 = "10.1.0";
 
-/* eslint-disable jsdoc/no-multi-asterisks -- needed to preserve original formatting of licences */
+/**
+ * @fileoverview Main Espree file that converts Acorn into Esprima output.
+ *
+ * This file contains code from the following MIT-licensed projects:
+ * 1. Acorn
+ * 2. Babylon
+ * 3. Babel-ESLint
+ *
+ * This file also contains code from Esprima, which is BSD licensed.
+ *
+ * Acorn is Copyright 2012-2015 Acorn Contributors (https://github.com/marijnh/acorn/blob/master/AUTHORS)
+ * Babylon is Copyright 2014-2015 various contributors (https://github.com/babel/babel/blob/master/packages/babylon/AUTHORS)
+ * Babel-ESLint is Copyright 2014-2015 Sebastian McKenzie <sebmck@gmail.com>
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * * Redistributions of source code must retain the above copyright
+ *   notice, this list of conditions and the following disclaimer.
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in the
+ *   documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Esprima is Copyright (c) jQuery Foundation, Inc. and Contributors, All Rights Reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *   * Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *   * Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 
 // To initialize lazily.
@@ -40154,7 +39882,7 @@ const Syntax = (function() {
     }
 
     for (key in VisitorKeys) {
-        if (Object.hasOwnProperty.call(VisitorKeys, key)) {
+        if (Object.hasOwn(VisitorKeys, key)) {
             types[key] = key;
         }
     }
@@ -40178,6 +39906,398 @@ exports.parse = parse;
 exports.supportedEcmaVersions = supportedEcmaVersions;
 exports.tokenize = tokenize;
 exports.version = version;
+
+
+/***/ }),
+
+/***/ 4594:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+
+/**
+ * @typedef {{ readonly [type: string]: ReadonlyArray<string> }} VisitorKeys
+ */
+
+/**
+ * @type {VisitorKeys}
+ */
+const KEYS = {
+    ArrayExpression: [
+        "elements"
+    ],
+    ArrayPattern: [
+        "elements"
+    ],
+    ArrowFunctionExpression: [
+        "params",
+        "body"
+    ],
+    AssignmentExpression: [
+        "left",
+        "right"
+    ],
+    AssignmentPattern: [
+        "left",
+        "right"
+    ],
+    AwaitExpression: [
+        "argument"
+    ],
+    BinaryExpression: [
+        "left",
+        "right"
+    ],
+    BlockStatement: [
+        "body"
+    ],
+    BreakStatement: [
+        "label"
+    ],
+    CallExpression: [
+        "callee",
+        "arguments"
+    ],
+    CatchClause: [
+        "param",
+        "body"
+    ],
+    ChainExpression: [
+        "expression"
+    ],
+    ClassBody: [
+        "body"
+    ],
+    ClassDeclaration: [
+        "id",
+        "superClass",
+        "body"
+    ],
+    ClassExpression: [
+        "id",
+        "superClass",
+        "body"
+    ],
+    ConditionalExpression: [
+        "test",
+        "consequent",
+        "alternate"
+    ],
+    ContinueStatement: [
+        "label"
+    ],
+    DebuggerStatement: [],
+    DoWhileStatement: [
+        "body",
+        "test"
+    ],
+    EmptyStatement: [],
+    ExperimentalRestProperty: [
+        "argument"
+    ],
+    ExperimentalSpreadProperty: [
+        "argument"
+    ],
+    ExportAllDeclaration: [
+        "exported",
+        "source"
+    ],
+    ExportDefaultDeclaration: [
+        "declaration"
+    ],
+    ExportNamedDeclaration: [
+        "declaration",
+        "specifiers",
+        "source"
+    ],
+    ExportSpecifier: [
+        "exported",
+        "local"
+    ],
+    ExpressionStatement: [
+        "expression"
+    ],
+    ForInStatement: [
+        "left",
+        "right",
+        "body"
+    ],
+    ForOfStatement: [
+        "left",
+        "right",
+        "body"
+    ],
+    ForStatement: [
+        "init",
+        "test",
+        "update",
+        "body"
+    ],
+    FunctionDeclaration: [
+        "id",
+        "params",
+        "body"
+    ],
+    FunctionExpression: [
+        "id",
+        "params",
+        "body"
+    ],
+    Identifier: [],
+    IfStatement: [
+        "test",
+        "consequent",
+        "alternate"
+    ],
+    ImportDeclaration: [
+        "specifiers",
+        "source"
+    ],
+    ImportDefaultSpecifier: [
+        "local"
+    ],
+    ImportExpression: [
+        "source"
+    ],
+    ImportNamespaceSpecifier: [
+        "local"
+    ],
+    ImportSpecifier: [
+        "imported",
+        "local"
+    ],
+    JSXAttribute: [
+        "name",
+        "value"
+    ],
+    JSXClosingElement: [
+        "name"
+    ],
+    JSXClosingFragment: [],
+    JSXElement: [
+        "openingElement",
+        "children",
+        "closingElement"
+    ],
+    JSXEmptyExpression: [],
+    JSXExpressionContainer: [
+        "expression"
+    ],
+    JSXFragment: [
+        "openingFragment",
+        "children",
+        "closingFragment"
+    ],
+    JSXIdentifier: [],
+    JSXMemberExpression: [
+        "object",
+        "property"
+    ],
+    JSXNamespacedName: [
+        "namespace",
+        "name"
+    ],
+    JSXOpeningElement: [
+        "name",
+        "attributes"
+    ],
+    JSXOpeningFragment: [],
+    JSXSpreadAttribute: [
+        "argument"
+    ],
+    JSXSpreadChild: [
+        "expression"
+    ],
+    JSXText: [],
+    LabeledStatement: [
+        "label",
+        "body"
+    ],
+    Literal: [],
+    LogicalExpression: [
+        "left",
+        "right"
+    ],
+    MemberExpression: [
+        "object",
+        "property"
+    ],
+    MetaProperty: [
+        "meta",
+        "property"
+    ],
+    MethodDefinition: [
+        "key",
+        "value"
+    ],
+    NewExpression: [
+        "callee",
+        "arguments"
+    ],
+    ObjectExpression: [
+        "properties"
+    ],
+    ObjectPattern: [
+        "properties"
+    ],
+    PrivateIdentifier: [],
+    Program: [
+        "body"
+    ],
+    Property: [
+        "key",
+        "value"
+    ],
+    PropertyDefinition: [
+        "key",
+        "value"
+    ],
+    RestElement: [
+        "argument"
+    ],
+    ReturnStatement: [
+        "argument"
+    ],
+    SequenceExpression: [
+        "expressions"
+    ],
+    SpreadElement: [
+        "argument"
+    ],
+    StaticBlock: [
+        "body"
+    ],
+    Super: [],
+    SwitchCase: [
+        "test",
+        "consequent"
+    ],
+    SwitchStatement: [
+        "discriminant",
+        "cases"
+    ],
+    TaggedTemplateExpression: [
+        "tag",
+        "quasi"
+    ],
+    TemplateElement: [],
+    TemplateLiteral: [
+        "quasis",
+        "expressions"
+    ],
+    ThisExpression: [],
+    ThrowStatement: [
+        "argument"
+    ],
+    TryStatement: [
+        "block",
+        "handler",
+        "finalizer"
+    ],
+    UnaryExpression: [
+        "argument"
+    ],
+    UpdateExpression: [
+        "argument"
+    ],
+    VariableDeclaration: [
+        "declarations"
+    ],
+    VariableDeclarator: [
+        "id",
+        "init"
+    ],
+    WhileStatement: [
+        "test",
+        "body"
+    ],
+    WithStatement: [
+        "object",
+        "body"
+    ],
+    YieldExpression: [
+        "argument"
+    ]
+};
+
+// Types.
+const NODE_TYPES = Object.keys(KEYS);
+
+// Freeze the keys.
+for (const type of NODE_TYPES) {
+    Object.freeze(KEYS[type]);
+}
+Object.freeze(KEYS);
+
+/**
+ * @author Toru Nagashima <https://github.com/mysticatea>
+ * See LICENSE file in root directory for full license.
+ */
+
+/**
+ * @typedef {import('./visitor-keys.js').VisitorKeys} VisitorKeys
+ */
+
+// List to ignore keys.
+const KEY_BLACKLIST = new Set([
+    "parent",
+    "leadingComments",
+    "trailingComments"
+]);
+
+/**
+ * Check whether a given key should be used or not.
+ * @param {string} key The key to check.
+ * @returns {boolean} `true` if the key should be used.
+ */
+function filterKey(key) {
+    return !KEY_BLACKLIST.has(key) && key[0] !== "_";
+}
+
+/**
+ * Get visitor keys of a given node.
+ * @param {object} node The AST node to get keys.
+ * @returns {readonly string[]} Visitor keys of the node.
+ */
+function getKeys(node) {
+    return Object.keys(node).filter(filterKey);
+}
+
+// Disable valid-jsdoc rule because it reports syntax error on the type of @returns.
+// eslint-disable-next-line valid-jsdoc
+/**
+ * Make the union set with `KEYS` and given keys.
+ * @param {VisitorKeys} additionalKeys The additional keys.
+ * @returns {VisitorKeys} The union set.
+ */
+function unionWith(additionalKeys) {
+    const retv = /** @type {{
+        [type: string]: ReadonlyArray<string>
+    }} */ (Object.assign({}, KEYS));
+
+    for (const type of Object.keys(additionalKeys)) {
+        if (Object.prototype.hasOwnProperty.call(retv, type)) {
+            const keys = new Set(additionalKeys[type]);
+
+            for (const key of retv[type]) {
+                keys.add(key);
+            }
+
+            retv[type] = Object.freeze(Array.from(keys));
+        } else {
+            retv[type] = Object.freeze(Array.from(additionalKeys[type]));
+        }
+    }
+
+    return Object.freeze(retv);
+}
+
+exports.KEYS = KEYS;
+exports.getKeys = getKeys;
+exports.unionWith = unionWith;
 
 
 /***/ })
