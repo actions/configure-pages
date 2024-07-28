@@ -43,6 +43,9 @@ function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, sit
       return {
         configurationFile: generatorConfigFile || detectOrDefaultConfigFile('next.config'),
         blankConfigurationFile: `${__dirname}/blank-configurations/next.js`,
+        // Support Next.js config wrappers, such as next-pwa
+        // https://github.com/actions/configure-pages/issues/44#issuecomment-1705407518
+        allowWrappingCall: true,
         properties: {
           // Static export
           // https://nextjs.org/docs/app/building-your-application/deploying/static-exports#version-history
