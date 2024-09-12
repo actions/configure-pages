@@ -36,6 +36,19 @@ function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, sit
           target: 'static'
         }
       }
+    case 'nuxt3':
+      return {
+        configurationFile: generatorConfigFile || './nuxt.config.ts',
+        blankConfigurationFile: `${__dirname}/blank-configurations/nuxt3.ts`,
+        allowWrappingCall: true,
+        properties: {
+          // Configure a base path of the app
+          'app.baseURL': path,
+
+          // Set the target to static too
+          ssr: false
+        }
+      }
     case 'next':
       // Next does not want a trailing slash
       path = removeTrailingSlash(path)
