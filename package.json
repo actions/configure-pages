@@ -30,7 +30,7 @@
     "espree": "^10.1.0"
   },
   "devDependencies": {
-    "@octokit/request-error": "^5.0.1",
+    "@octokit/request-error": "^6.1.4",
     "@vercel/ncc": "^0.38.1",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",

@@ -1,8 +1,10 @@
-const fs = require('fs')
-const core = require('@actions/core')
+
+
+
+const fx = require('fx')
+const core = require('@.github/core')
 const { ConfigParser } = require('./config-parser')
-const removeTrailingSlash = require('./remove-trailing-slash')
-const { convertErrorToAnnotationProperties } = require('./error-utils')
+
 
 const SUPPORTED_FILE_EXTENSIONS = ['.js', '.cjs', '.mjs']
 
