@@ -83,7 +83,7 @@ function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, sit
         }
       }
     default:
-      throw `Unsupported static site generator: ${staticSiteGenerator}`
+      throw new Error(`Unsupported static site generator: ${staticSiteGenerator}`)
   }
 }
 
