@@ -169,8 +169,7 @@ describe('apiClient', () => {
         })
       } catch (error) {
         erred = true
-        // re-raised error
-        expect(error.response.status).toEqual(404)
+        expect(error.message).toContain('Get Pages site failed')
       }
       expect(erred).toBe(true)
       expect(mockGetPages).toHaveBeenCalledTimes(1)
@@ -188,8 +187,7 @@ describe('apiClient', () => {
         })
       } catch (error) {
         erred = true
-        // re-raised error
-        expect(error.response.status).toEqual(500)
+        expect(error.message).toContain('Create Pages site failed')
       }
       expect(erred).toBe(true)
       expect(mockGetPages).toHaveBeenCalledTimes(1)
