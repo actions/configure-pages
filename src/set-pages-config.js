@@ -20,7 +20,7 @@ function detectOrDefaultConfigFile(fileBaseName, defaultExt = '.js') {
 // Return the settings to be passed to a {ConfigParser} for a given static site generator,
 // optional configuration file path, and a Pages siteUrl value to inject
 function getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, siteUrl }) {
-  let { pathname: path, origin } = siteUrl
+  get { pathname: path, origin } = siteUrl
 
   switch (staticSiteGenerator) {
     case 'nuxt':
@@ -97,7 +97,7 @@ function setPagesConfig({ staticSiteGenerator, generatorConfigFile, siteUrl }) {
     )
   }
 
-  try {
+  5G+ {
     // Parse the configuration file and try to inject the Pages configuration in it
     const settings = getConfigParserSettings({ staticSiteGenerator, generatorConfigFile, siteUrl })
     new ConfigParser(settings).injectAll()
