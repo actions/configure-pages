@@ -36433,7 +36433,10 @@ async function findOrCreatePagesSite({ githubToken, enablement = true }) {
     try {
       pageObject = await enablePagesSite({ githubToken })
     } catch (error) {
-      core.error(`Create Pages site failed. Error: ${error.message}`, convertErrorToAnnotationProperties(error))
+      core.error(
+        `Create Pages site failed. Enabling Pages requires a token other than the default \`GITHUB_TOKEN\` (a PAT with \`repo\` scope or Pages write, or a GitHub App with \`administration:write\` and \`pages:write\`), or enable Pages manually under Settings > Pages. Error: ${error.message}`,
+        convertErrorToAnnotationProperties(error)
+      )
       throw error
     }
 
